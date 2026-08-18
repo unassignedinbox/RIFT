@@ -1,7 +1,7 @@
 //============================================================================================================================================
 //                                                          OUTLINERPANEL.H
 //============================================================================================================================================
-// 🧩 The general-purpose world outliner and entry inspector, transcribed from GameOutliner.tsx — declarations in, one recorded tree out.
+// 🧩 The scene directory — the CAD panel's outliner, transcribed from DirectoryPane.tsx — declarations in, one recorded tree out.
 
 #pragma once
 
@@ -19,44 +19,49 @@ namespace Slate
 //                                                   THE CLASSIFICATIONS
 //------------------------------------------------------------------------------------------------------------------------
 
-/// 🧩 Which constituent of the world a row declares — drives the dummy glyph's tint.
+/// 🧩 Which constituent of the part one directory row declares — drives the dummy glyph's tint.
 /// tag   contract, nonallocating, nonthrowing
-enum class OutlinerClassification : std::uint32_t
+enum class DirectoryClassification : std::uint32_t
 {
-    Level                = 0u,   // [-] - #eab308
-    Enclosure            = 1u,   // [-] - #8a8a8a  (the reference's `folder`)
-    Actor                = 2u,   // [-] - #3b82f6
-    Camera               = 3u,   // [-] - #ec4899
-    Light                = 4u,   // [-] - #f59e0b
-    Audio                = 5u,   // [-] - #8b5cf6
-    Particle             = 6u,   // [-] - #10b981
-    Trigger              = 7u,   // [-] - #ef4444
-    Script               = 8u,   // [-] - #06b6d4
-    ClassificationCount  = 9u    // [-] - the closed count, never a classification
+    Scene              = 0u,   // [-] - #7ec8ff  `scene`
+    Enclosure          = 1u,   // [-] - #b98bff  `folder`
+    Sketch             = 2u,   // [-] - #37d6d6
+    Solid              = 3u,   // [-] - #ffb24d
+    Cylinder           = 4u,   // [-] - #4fd18b
+    Sphere             = 5u,   // [-] - #ff7ab8
+    Cone               = 6u,   // [-] - #ff6b6b
+    Revolve            = 7u,   // [-] - #c99b6a
+    Loft               = 8u,   // [-] - #5b8cff
+    ClassificationCount = 9u   // [-] - the closed count, never a classification
 };
 
-/// 🧩 The tint a classification carries, verbatim from the reference's colour record.
+/// 🧩 The tint a classification carries, verbatim from CLASSIFICATION_HUE.
 /// cost  ✔️
 /// tag   api, nonallocating, nonthrowing
-InkOrdinate ClassificationTint(OutlinerClassification Classification);
+InkOrdinate ClassificationTint(DirectoryClassification Classification);
 
-/// 🧩 The lowercase run a classification spells in the inspector subtitle.
+/// 🧩 The caption a classification spells in the inspector and metadata panes (CLASSIFICATION_LABEL).
 /// cost  ✔️
 /// tag   api, nonallocating, nonthrowing
-const char* ClassificationRun(OutlinerClassification Classification);
+const char* ClassificationLabel(DirectoryClassification Classification);
+
+/// 🧩 The two-letter abbreviation a history group spells (CLASSIFICATION_ABBR).
+/// cost  ✔️
+/// tag   api, nonallocating, nonthrowing
+const char* ClassificationAbbr(DirectoryClassification Classification);
 
 //------------------------------------------------------------------------------------------------------------------------
 //                                                    THE ROW DECLARATION
 //------------------------------------------------------------------------------------------------------------------------
 
-/// 🧩 One row the outliner seats — borrowed caption, classification, host-owned disclosure and presence,
+/// 🧩 One row the directory seats — borrowed caption, classification, host-owned disclosure and presence,
 ///       and the enclosed forest beneath it. No presented datum is owned.
 /// tag   contract, nonallocating, nonthrowing
 struct OutlinerRowDeclaration
 {
     const char*                   Caption         = "";           // [-] - borrowed; outlives the tick
-    const char*                   Identity        = "";           // [-] - borrowed; the host's token
-    OutlinerClassification        Classification  = OutlinerClassification::Actor;
+    const char*                   Identity        = "";           // [-] - borrowed; the record token
+    DirectoryClassification       Classification  = DirectoryClassification::Solid;
     bool*                         Expanded        = nullptr;      // [-] - host-owned disclosure
     bool*                         Hidden          = nullptr;      // [-] - host-owned presence
     const OutlinerRowDeclaration* Enclosed        = nullptr;      // [-] - borrowed forest beneath
@@ -67,141 +72,77 @@ struct OutlinerRowDeclaration
 /// tag   contract, nonallocating, nonthrowing
 struct OutlinerComposition
 {
-    const char* TitleRun   = "World Outliner";   // [-] - borrowed
-    const char* ContextRun = "Level_01_City";    // [-] - borrowed
-};
-
-/// 🧩 One inspected entry's ordinates, seated at the reference's declared defaults.
-/// note  🔴 The host owns these; the inspector writes through its reference, exactly as the sheet's
-///       ordinates belong to the host in the engine's validation seat.
-/// tag   contract, nonallocating, nonthrowing
-struct EntryOrdinates
-{
-    double  Position[3]     = { 0.0, 0.0, 0.0 };        // [m]   - Transform.Position
-    double  Rotation[3]     = { 0.0, 0.0, 0.0 };        // [deg] - Transform.Rotation
-    double  Scale[3]        = { 1.0, 1.0, 1.0 };        // [-]   - Transform.Scale
-
-    std::uint32_t  Intensity    = 100000u;               // [lm]  - light
-    std::uint8_t   LightColour[4] = { 255u, 240u, 220u, 255u };   // [-] - light
-    bool           CastShadows  = true;                  // [-]   - light
-
-    std::uint32_t  Projection   = 0u;                    // [-]   - camera (0 perspective, 1 orthographic)
-    double         FieldOfView  = 90.0;                  // [deg] - camera
-    double         NearClip     = 0.1;                   // [m]   - camera
-    double         FarClip      = 10000.0;               // [m]   - camera
-
-    double         Volume       = 0.8;                   // [-]   - audio
-    bool           Looping      = true;                  // [-]   - audio / particle
-    bool           Spatial      = false;                 // [-]   - audio
-
-    double         EmitRate     = 50.0;                  // [/s]  - particle
-    double         LifeTime     = 5.0;                   // [s]   - particle
-
-    char           EventTag[32] = "Spawn";               // [-]   - trigger
-    double         TriggerRadius = 50.0;                 // [m]   - trigger
-
-    std::uint32_t  ScriptState  = 0u;                    // [-]   - script (0 playing, 1 paused, 2 stopped)
-    std::uint32_t  Difficulty   = 1u;                    // [-]   - script
-
-    bool           StaticMesh   = true;                  // [-]   - actor
-    bool           SimulatePhysics   = false;            // [-]   - actor
-    bool           GenerateOverlaps  = true;             // [-]   - actor
-
-    bool           WorldPartition    = true;             // [-]   - level
-    bool           EditorOnly        = false;            // [-]   - enclosure
+    const char* TitleRun   = "Directory";     // [-] - borrowed
+    const char* ContextRun = "Bracket_Rev4";  // [-] - borrowed
 };
 
 //------------------------------------------------------------------------------------------------------------------------
-//                                                     THE OUTLINER PANEL
+//                                                     THE DIRECTORY
 //------------------------------------------------------------------------------------------------------------------------
 
-/// 🧩 The general-purpose outliner — head, retention field, the disclosure forest, and the count foot.
+/// 🧩 The scene directory — head, retention field, the disclosure forest, the count foot.
 /// note  Retention retains a row when its caption carries the run case-insensitively, or any enclosed row
-///       is retained; while a run stands, every branch presents open, exactly as the reference filters.
+///       is retained; while a run stands, every branch presents open. Selection is additive under the
+///       control gesture, exactly as the reference's ctrl-click toggles tokens in the selection set.
 /// tag   contract, nonallocating, nonthrowing
 class OutlinerPanel
 {
 public:
 
-    OutlinerPanel()                             = default;
-    OutlinerPanel(const OutlinerPanel&)         = delete;
+    static constexpr std::uint32_t SelectionCapacity = 8u;   // [-] - additive selection ceiling
+
+    OutlinerPanel()                                = default;
+    OutlinerPanel(const OutlinerPanel&)            = delete;
     OutlinerPanel& operator=(const OutlinerPanel&) = delete;
-    ~OutlinerPanel()                            = default;
+    ~OutlinerPanel()                               = default;
 
-    /// 🧩 Binds the glyph depot whose dummy glyph the classification seats present.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    Deliver<bool> Construct(const IconDepot& ArrivingDepot);
-
-    /// 🧩 Presents the outliner inside the seat extent, one tick.
+    /// 🧩 Presents the directory inside the seat extent, one tick.
     /// tag   api, nonallocating, nonthrowing
     void Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
                  const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
-                 const OutlinerComposition& Composition);
+                 const OutlinerComposition& Composition, const IconDepot& Depot);
 
     /// 🧩 The retention run, host-readable and host-writable.
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing
     char RetentionRun[64] = "";   // [-] - the live run
 
-    /// 🧩 The identity of the taken row, or the vacated run when nothing stands taken.
+    /// 🧩 The taken tokens, in take order; the head pill spells the count past one.
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing
-    char TakenIdentity[32] = "";   // [-] - taken row token
+    char TakenIdentities[SelectionCapacity][16] = {};   // [-] - taken record tokens
+    std::uint32_t TakenCount = 0u;                       // [-] - standing selection size
 
     /// 🧩 Raised for one tick when a row's inspect gesture (double press) lands.
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing
     bool InspectRaised = false;   // [-] - double-press edge
 
+    /// 🧩 Whether the token stands taken.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    bool TokenTaken(const char* Identity) const;
+
+    /// 🧩 Seats exactly one taken token.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    void SeatTaken(const char* Identity);
+
 private:
 
-    /// 🧩 Presents one row and its enclosed forest; reports whether any row was taken or inspected.
+    /// 🧩 Presents one row and its enclosed forest.
     /// tag   internal, nonallocating, nonthrowing
     void PresentRow(RecordingSurface& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
-                    std::uint32_t Depth, bool RetentionStanding);
+                    std::uint32_t Depth, bool RetentionStanding, const IconDepot& Depot);
 
     /// 🧩 Whether the row, or any row it encloses, carries the retention run.
     /// cost  🚩
     /// tag   internal, nonallocating, nonthrowing
     bool Retained(const OutlinerRowDeclaration& Row) const;
 
-    /// 🧩 Counts the row and every row beneath it.
-    /// cost  🚩
-    /// tag   internal, nonallocating, nonthrowing
-    std::uint32_t CountEnclosed(const OutlinerRowDeclaration* Rows, std::uint32_t RowCount) const;
-
-    const IconDepot*  Depot        = nullptr;   // [-] - the dummy glyph depot
-    float             ScrollAcross = 0.0f;      // [px] - body scroll ordinate
-    std::uint32_t     PresentedCount = 0u;      // [-]  - rows presented this tick (for the foot)
-};
-
-//------------------------------------------------------------------------------------------------------------------------
-//                                                   THE ENTRY INSPECTOR
-//------------------------------------------------------------------------------------------------------------------------
-
-/// 🧩 The entry inspector — the reference's GamePropertiesPane: head, transform card, classification card.
-/// tag   contract, nonallocating, nonthrowing
-class EntryInspectorPanel
-{
-public:
-
-    /// 🧩 Presents the inspector for one declared row inside the seat extent.
-    /// in    Declared  [-]  the row whose components are presented; nullptr presents the vacated seat
-    /// tag   api, nonallocating, nonthrowing
-    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
-                 const OutlinerRowDeclaration* Declared, EntryOrdinates& Ordinates,
-                 const IconDepot& Depot);
-
-    /// 🧩 Raised for one tick when the back action is pressed.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    bool BackRaised = false;   // [-] - the back action edge
-
-    /// 🧩 Per-entry colour swatch presentation seat, raised for one tick when the swatch is pressed.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    bool ColourSeatedOpen = false;   // [-] - light colour swatch
+    const IconDepot* Depot          = nullptr;   // [-] - the dummy glyph depot
+    float            ScrollAcross   = 0.0f;      // [px] - body scroll ordinate
+    std::uint32_t    PresentedCount = 0u;        // [-]  - rows presented this tick
 };
 
 }   // namespace Slate

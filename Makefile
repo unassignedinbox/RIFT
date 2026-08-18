@@ -19,8 +19,9 @@ ENGINE_SOURCES := \
     Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp \
     Engine/SlateUI/Interface/ControlPanel/Source/ControlPanel.cpp \
     Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp \
+    Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp \
+    Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp \
     Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp \
-    Engine/SlateUI/Interface/CadPanel/Source/CadPanel.cpp \
     Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 
 BUILD := Build
@@ -37,7 +38,6 @@ $(BUILD):
 	mkdir -p $(BUILD) $(BUILD)/Shots
 
 $(BUILD)/OutlinerHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) \
-                       Engine/Application/OutlinerHost/Source/WorldEditorSeat.cpp \
                        Engine/Application/OutlinerHost/Source/OutlinerHost.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
@@ -46,6 +46,7 @@ $(BUILD)/PanelValidationHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) Engine/Applicat
 
 proof: all
 	mkdir -p VisualProof/OutlinerHost VisualProof/PanelValidationHost
+	rm -f $(BUILD)/Shots/*.rgba
 	$(BUILD)/OutlinerHost --prefix $(BUILD)/Shots/outliner
 	$(BUILD)/PanelValidationHost --prefix $(BUILD)/Shots/validation
 	for Dump in $(BUILD)/Shots/outliner-*.rgba; do \
@@ -61,7 +62,6 @@ clean:
 # ① The interactive window host — requires local GLFW and OpenGL development packages
 #    (`pkg-config glfw3 gl`). Not built by default; the sandbox has neither.
 outliner-window: $(IMGUI_SOURCES) $(ENGINE_SOURCES) \
-                 Engine/Application/OutlinerHost/Source/WorldEditorSeat.cpp \
                  Engine/Application/OutlinerHost/Source/WindowHost.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(shell pkg-config --cflags --libs glfw3 gl) -o $(BUILD)/OutlinerWindowHost
 

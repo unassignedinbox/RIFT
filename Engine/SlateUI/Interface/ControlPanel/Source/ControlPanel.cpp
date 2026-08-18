@@ -357,6 +357,42 @@ void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 }
 
 //------------------------------------------------------------------------------------------------------------------------
+//                                                    THE SCALAR ROW
+//------------------------------------------------------------------------------------------------------------------------
+
+void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+                      const SliderDeclaration& Range, double Step, double& Amount, const ControlSheet& Sheet,
+                      const char* PushIdentity)
+{
+    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
+                    Declared.Caption, Sheet.InkMuted, Declared.CaptionSize);
+
+    const PlaneExtent Capsule = Spanning(Row.LeastAlong + Declared.CaptionExtent + 10.0f, CentredAcross(Row, 32.0f),
+                                         Range.NumeralExtent, 32.0f);
+    const PlaneExtent Track   = Spanning(Capsule.MostAlong + 7.0f, CentredAcross(Row, 19.0f),
+                                         Row.MostAlong - Capsule.MostAlong - 7.0f, 19.0f);
+
+    bool Held = false, Roused = false;
+    if (PresentSeat(Capsule, PushIdentity, Held, Roused) && ImGui::IsItemActive())
+        Amount += ImGui::GetIO().MouseDelta.x * Step;   // 📝 the ScalarEntry drag
+
+    if (Amount < Range.Minimum) Amount = Range.Minimum;
+    if (Amount > Range.Maximum) Amount = Range.Maximum;
+
+    char Numeral[32];
+    FormatNumeral(Numeral, Amount, Range.Figures);
+    PresentCapsule(Surface, Capsule, Numeral, Range.Unit, Sheet, Roused);
+
+    // ① The ScalarEntry track — no fill, the knob rests centred.
+    Surface.Ground(Track, Sheet.TrackGround, Track.SpanAcross() * 0.5f);
+    const float KnobExtent = Track.SpanAcross() + 2.0f;
+    Surface.Medallion(Track.LeastAlong + Track.SpanAlong() * 0.5f, Track.LeastAcross + Track.SpanAcross() * 0.5f,
+                      KnobExtent * 0.5f + 3.0f, InkOrdinate{ 0u, 0u, 0u, 89u });
+    Surface.Medallion(Track.LeastAlong + Track.SpanAlong() * 0.5f, Track.LeastAcross + Track.SpanAcross() * 0.5f,
+                      KnobExtent * 0.5f, Sheet.KnobInk);
+}
+
+//------------------------------------------------------------------------------------------------------------------------
 //                                                    THE VECTOR ROW
 //------------------------------------------------------------------------------------------------------------------------
 

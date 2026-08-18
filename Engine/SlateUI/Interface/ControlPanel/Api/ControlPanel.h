@@ -113,6 +113,13 @@ void PresentDropdownRow(RecordingSurface& Surface, const PlaneExtent& Row, const
 void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       const SliderDeclaration& Range, double& Amount, const ControlSheet& Sheet, const char* PushIdentity);
 
+/// 🧩 One labelled scalar row — the reference's ScalarEntry: numeral capsule beside a centred-knob track,
+///       the capsule drag stepping the amount.
+/// tag   api, nonallocating, nonthrowing
+void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+                      const SliderDeclaration& Range, double Step, double& Amount, const ControlSheet& Sheet,
+                      const char* PushIdentity);
+
 /// 🧩 One labelled vector row — three axis capsules, each numeral editable.
 /// tag   api, nonallocating, nonthrowing
 void PresentVectorRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,

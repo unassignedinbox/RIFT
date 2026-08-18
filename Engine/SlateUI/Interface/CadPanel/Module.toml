@@ -1,9 +1,0 @@
-# CadPanel — a SlateUI interface unit.
-# Declarative map only; the standalone build is the Makefile at the repository root.
-
-[unit]
-name    = "CadPanel"
-product = "StaticLibrary"
-subject = [ "Interface" ]
-
-# 📝 The Frontier CAD workspace, transcribed from References/Cad.

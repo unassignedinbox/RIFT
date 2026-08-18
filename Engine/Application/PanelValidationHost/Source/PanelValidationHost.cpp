@@ -1,11 +1,13 @@
 //============================================================================================================================================
 //                                                      PANELVALIDATIONHOST.CPP
 //============================================================================================================================================
-// 🧩 Records the texture-paint and CAD panels for direct visual comparison against their reference prototypes.
+// 🧩 Records the texture-paint panels and the CAD drafting panel for direct visual comparison against their references.
 
-#include "Engine/SlateUI/Interface/CadPanel/Api/CadPanel.h"
 #include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
 #include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 #include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
 #include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 #include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
@@ -29,43 +31,20 @@ using namespace Slate;
 constexpr std::uint32_t DisplayAlong  = 1600u;   // [px]
 constexpr std::uint32_t DisplayAcross = 900u;    // [px]
 
-constexpr float SheetMargin   = 40.0f;    // [px] - the sheet's outer margin
-constexpr float SheetTitle    = 36.0f;    // [px] - the sheet's title strip
-constexpr float CardGap       = 20.0f;    // [px] - between seated cards
-constexpr float CardExtent    = 730.0f;   // [px] - each seated card's along span
+constexpr float SheetMargin = 40.0f;    // [px] - the sheet's outer margin
+constexpr float SheetTitle  = 36.0f;    // [px] - the sheet's title strip
+constexpr float CardGap     = 20.0f;    // [px] - between seated cards
 
-/// 🧩 The browser forest the CAD seat borrows, seeded as the reference's data.js seeds it.
-/// tag   internal
-struct CadSeedStand
-{
-    bool OriginExpanded = true;    // [-] - the Origin enclosure
-    bool SketchesExpanded = true;  // [-]
-    bool BodiesExpanded = true;    // [-]
-    bool OriginHidden = false;     // [-]
-    bool FrontHidden = false;      // [-]
-    bool OriginLocked = true;      // [-] - the datums lock
-
-    BrowserRowDeclaration Planes[3];       // [-] - Front, Top, Right
-    BrowserRowDeclaration Enclosures[3];   // [-] - Origin, Sketches, Bodies
-
-    CadSeedStand()
-    {
-        Planes[0] = { "Front Plane", BrowserClassification::Plane, 0xEF4444u, "XY", nullptr, &FrontHidden, nullptr, nullptr, 0u };
-        Planes[1] = { "Top Plane",   BrowserClassification::Plane, 0x22C55Eu, "XZ", nullptr, nullptr, nullptr, nullptr, 0u };
-        Planes[2] = { "Right Plane", BrowserClassification::Plane, 0x3B82F6u, "YZ", nullptr, nullptr, nullptr, nullptr, 0u };
-
-        Enclosures[0] = { "Origin",   BrowserClassification::Datums,    0u, "", &OriginExpanded,   &OriginHidden, &OriginLocked, Planes, 3u };
-        Enclosures[1] = { "Sketches", BrowserClassification::Enclosure, 0u, "", &SketchesExpanded, nullptr, nullptr, nullptr, 0u };
-        Enclosures[2] = { "Bodies",   BrowserClassification::Enclosure, 0u, "", &BodiesExpanded,   nullptr, nullptr, nullptr, 0u };
-    }
-};
+//------------------------------------------------------------------------------------------------------------------------
+//                                              THE TEXTURE-PAINT SEED
+//------------------------------------------------------------------------------------------------------------------------
 
 /// 🧩 Seats the four mock layers, verbatim from the reference's mockLayers.
 /// tag   internal
 void SeatLayers(LayerOrdinates (&Layers)[6])
 {
-    static const char* const EdgeWearChannels[3] = { "Base Colour", "Roughness", "Metallic" };
-    static const char* const DirtPassChannels[2] = { "Base Colour", "Roughness" };
+    static const char* const EdgeWearChannels[3]  = { "Base Colour", "Roughness", "Metallic" };
+    static const char* const DirtPassChannels[2]  = { "Base Colour", "Roughness" };
     static const char* const ScratchesChannels[2] = { "Base Colour", "Bump" };
     static const char* const BaseMetalChannels[4] = { "Base Colour", "Roughness", "Metallic", "Bump" };
 
@@ -95,6 +74,121 @@ void SeatLayers(LayerOrdinates (&Layers)[6])
     Layers[3].Channels = BaseMetalChannels;  Layers[3].ChannelCount = 4u;
     Layers[3].Mask.Enabled = false;
 }
+
+//------------------------------------------------------------------------------------------------------------------------
+//                                              THE CAD DRAFTING SEED
+//------------------------------------------------------------------------------------------------------------------------
+
+/// 🧩 The CAD drafting seed — the same forest the standalone directory seats, reused by the drafting panel.
+/// tag   internal
+struct DraftingStand
+{
+    OutlinerRowDeclaration Root[1];
+    OutlinerRowDeclaration Sketches[2];
+    OutlinerRowDeclaration Bracket[3];
+    OutlinerRowDeclaration Bodies[3];
+    OutlinerRowDeclaration Enclosed[2];
+
+    bool ExpandedRoot     = true;
+    bool ExpandedSketches = true;
+    bool ExpandedBodies   = true;
+    bool ExpandedBracket  = true;
+    bool HiddenSketches   = false;
+    bool HiddenBasePlate  = false;
+    bool RevisionFoldOpen = true;
+
+    /// 🧩 Wires the forest, verbatim from the reference's initialStore.
+    /// tag   internal
+    void Assemble()
+    {
+        Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &HiddenBasePlate, nullptr, 0u };
+        Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
+
+        Bracket[0] = { "SOL_Plate",   "r007", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
+        Bracket[1] = { "SOL_Boss",    "r008", DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
+        Bracket[2] = { "SOL_Rib",     "r009", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
+
+        Bodies[0] = { "BODY_Bracket", "r006", DirectoryClassification::Enclosure, &ExpandedBracket, nullptr, Bracket, 3u };
+        Bodies[1] = { "SOL_Housing",  "r010", DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
+        Bodies[2] = { "SOL_Dome",     "r011", DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
+
+        Enclosed[0] = { "Sketches", "r002", DirectoryClassification::Enclosure, &ExpandedSketches, &HiddenSketches, Sketches, 2u };
+        Enclosed[1] = { "Bodies",   "r005", DirectoryClassification::Enclosure, &ExpandedBodies,   nullptr,               Bodies,   3u };
+
+        Root[0] = { "Part", "r001", DirectoryClassification::Scene, &ExpandedRoot, nullptr, Enclosed, 2u };
+    }
+
+    /// 🧩 Finds the row carrying the identity, through the whole forest.
+    /// cost  🚩
+    /// tag   internal
+    const OutlinerRowDeclaration* Find(const char* Identity) const
+    {
+        const OutlinerRowDeclaration* Stacks[4] = { Root, Enclosed, Bodies, Bracket };
+        const std::uint32_t Counts[4] = { 1u, 2u, 3u, 3u };
+        const OutlinerRowDeclaration* Extra[2] = { Sketches, nullptr };
+        for (std::uint32_t StackOrdinal = 0u; StackOrdinal < 4u; ++StackOrdinal)
+            for (std::uint32_t Ordinal = 0u; Ordinal < Counts[StackOrdinal]; ++Ordinal)
+            {
+                const OutlinerRowDeclaration& Row = Stacks[StackOrdinal][Ordinal];
+                if (std::strcmp(Row.Identity, Identity) == 0)
+                    return &Row;
+                for (std::uint32_t Inner = 0u; Inner < Row.EnclosureCount; ++Inner)
+                    if (std::strcmp(Row.Enclosed[Inner].Identity, Identity) == 0)
+                        return &Row.Enclosed[Inner];
+            }
+        for (std::uint32_t Ordinal = 0u; Ordinal < 2u; ++Ordinal)
+            if (Extra[Ordinal] != nullptr && std::strcmp(Extra[Ordinal]->Identity, Identity) == 0)
+                return Extra[Ordinal];
+        return nullptr;
+    }
+};
+
+/// 🧩 The revision record, seeded as the reference's generateRevisions seats it.
+/// tag   internal
+struct RevisionStand
+{
+    static constexpr std::uint32_t RevisionCapacity = 32u;   // [-]
+
+    bool Folds[RevisionCapacity] = {};   // [-] - host-owned revision folds
+    RevisionDeclaration Revisions[RevisionCapacity];
+
+    /// 🧩 Seats the revisions — every record's creation pair, plus the seeded edits the fold demonstrates.
+    /// tag   internal
+    void Assemble(DraftingStand& Stand)
+    {
+        static const char* const CreatedRuns[11] = {
+            "Created Part", "Created Sketches", "Created SK_BasePlate", "Created SK_BoltHoles", "Created Bodies",
+            "Created BODY_Bracket", "Created SOL_Plate", "Created SOL_Boss", "Created SOL_Rib",
+            "Created SOL_Housing", "Created SOL_Dome"
+        };
+        static const char* const Tokens[11] = {
+            "r001", "r002", "r003", "r004", "r005", "r006", "r007", "r008", "r009", "r010", "r011"
+        };
+
+        std::uint32_t Seated = 0u;
+        for (std::uint32_t Ordinal = 0u; Ordinal < 11u && Seated + 2u < RevisionCapacity; ++Ordinal)
+        {
+            Revisions[Seated++] = { Tokens[Ordinal], RevisionCategory::Start,  CreatedRuns[Ordinal], "Initial state",
+                                    "", "System", "", "09:14", "2026-08-17", &Folds[Seated] };
+            Revisions[Seated++] = { Tokens[Ordinal], RevisionCategory::Create, "Added to scene", "Inserted at origin",
+                                    "", "System", "", "09:19", "2026-08-17", &Folds[Seated] };
+        }
+
+        // ① The seeded edits — the boss cylinder's radius, the plate's draft, the sketch's constraints.
+        Revisions[Seated++] = { "r008", RevisionCategory::Parameter, "Adjusted radius", "Radius 6.25 \xE2\x86\x92 6.75",
+                                "Increased radius to match new constraints.", "Alex Chen", "6.75", "10:42", "2026-08-17",
+                                &Stand.RevisionFoldOpen };
+        Revisions[Seated++] = { "r008", RevisionCategory::Feature, "Draft angle applied", "Draft angle 3\xC2\xB0",
+                                "Customer requested smoother finish.", "Sam Rivera", "3.0", "11:05", "2026-08-17",
+                                &Folds[Seated] };
+        Revisions[Seated++] = { "r003", RevisionCategory::Sketch, "Profile constrained", "12 constraints",
+                                "Approximated spline from DXF import.", "Maria Rossi", "", "11:31", "2026-08-17",
+                                &Folds[Seated] };
+        Count = Seated;
+    }
+
+    std::uint32_t Count = 0u;   // [-] - seated revisions
+};
 
 /// 🧩 One framed card seat on the validation sheet.
 /// tag   internal
@@ -163,50 +257,50 @@ int main(int ArgumentCount, char** Arguments)
     Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
                                           Depot.PictureOrdinates() });
 
-    // ② The seated ordinates — mock layers, channel sheet, mask sheet, the CAD seed.
+    // ② The seated ordinates.
     LayerOrdinates Layers[6];
     SeatLayers(Layers);
-
     ChannelOrdinates Channels;
     SeatChannelOrdinates(Channels);
-
     MaskOrdinates MaskSheet;
 
-    CadSeedStand CadSeed;
-    const CadComposition Composition = { "Part01", "Part01", 0u, 0u };
+    DraftingStand Drafting;
+    Drafting.Assemble();
+    RevisionStand Revisions;
+    Revisions.Assemble(Drafting);
 
     LayerStackPanel StackPanel;
     ChannelPropertyPanel ChannelPanel;
     MaskPropertyPanel MaskPanel;
-    CadWorkspacePanel CadPanel;
 
     // ③ The scripted states — one dump each.
     struct ValidationState
     {
         const char*  ShotRun;           // [-] - the dump name
-        std::uint32_t Seat;             // [-] - 0 texture layers, 1 texture mask, 2 CAD, 3 texture reorder
+        std::uint32_t Seat;             // [-] - 0 texture layers, 1 texture mask, 2 texture reorder, 3 CAD properties, 4 CAD history
         std::uint32_t ActiveLayer;      // [-] - taken layer ordinal
         bool          ActiveTargetMask; // [-]
         bool          LayerExpanded;    // [-]
         bool          DragScripted;     // [-] - seat a live reorder drag under the pointer
     };
-    const ValidationState States[4] =
+    const ValidationState States[5] =
     {
         { "texturepaint-layers",  0u, 0u, false, true,  false },
         { "texturepaint-mask",    1u, 0u, true,  false, false },
-        { "cad-workspace",        2u, 0u, false, false, false },
-        { "texturepaint-reorder", 3u, 1u, false, false, true  },
+        { "texturepaint-reorder", 2u, 1u, false, false, true  },
+        { "cad-properties",       3u, 0u, false, false, false },
+        { "cad-history",          4u, 0u, false, false, false },
     };
 
     for (const ValidationState& State : States)
     {
         for (int Warm = 0; Warm < 3; ++Warm)
         {
-            // ①① The scripted pointer: a press on the Dirt Pass zone that travels to the Base Metal card.
+            // ①① The scripted pointer: a press on the Dirt Pass zone that travels between cards.
             if (State.DragScripted)
             {
-                const ImVec2 PressSeat(250.0f, 330.0f);   // [px] - the Dirt Pass zone
-                const ImVec2 DropSeat(250.0f, 380.0f);     // [px] - between Scratches and Base Metal
+                const ImVec2 PressSeat(250.0f, 330.0f);
+                const ImVec2 DropSeat(250.0f, 380.0f);
                 if (Warm == 0)
                 {
                     VendorIO.MousePos = PressSeat;
@@ -239,48 +333,53 @@ int main(int ArgumentCount, char** Arguments)
                 const PlaneExtent Desk = Spanning(0.0f, 0.0f, static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));
                 Surface.Ground(Desk, Sheet.DeskGround, 0.0f);
 
-                // ① The sheet's title strip.
-                const char* TitleRun = State.Seat == 2u ? "RIFT \u2014 Panel Validation \xC2\xB7 CAD Workspace (References/Cad \xC2\xB7 transcribed)"
-                    : "RIFT \u2014 Panel Validation \xC2\xB7 Texture Paint (References/remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
+                const char* TitleRun = State.Seat >= 3u
+                    ? "RIFT \u2014 Panel Validation \xC2\xB7 CAD drafting panel (remix-remix-global-ui \xC2\xB7 DirectoryPane + Inspector \xC2\xB7 transcribed)"
+                    : "RIFT \u2014 Panel Validation \xC2\xB7 Texture Paint (remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
                 Surface.TextRun(SheetMargin, 8.0f, TitleRun, Sheet.InkMuted, 12.5f);
 
-                if (State.Seat == 3u)
+                if (State.Seat <= 2u)
                 {
-                    // ①① The reorder seat — the drag travels live; the dump ghosts the card and rails the drop.
-                    LayerOrdinates SeatedLayers[6];
-                    SeatLayers(SeatedLayers);
-                    StackPanel.ActiveLayer = State.ActiveLayer;
-                    StackPanel.ActiveTargetMask = State.ActiveTargetMask;
-
-                    const PlaneExtent StackSeat = PresentCard(Surface, SheetMargin, CardExtent, Sheet,
-                                                              "LayersPane \xC2\xB7 reorder drag");
-                    StackPanel.Advance(Surface, StackSeat, SeatedLayers, 4u, Depot);
-                    (void)Channels; (void)MaskSheet;
-                }
-                else if (State.Seat == 0u || State.Seat == 1u)
-                {
+                    // ②① The texture-paint seats.
                     LayerOrdinates SeatedLayers[6];
                     SeatLayers(SeatedLayers);
                     SeatedLayers[State.ActiveLayer].Expanded = State.LayerExpanded;
-
                     StackPanel.ActiveLayer = State.ActiveLayer;
                     StackPanel.ActiveTargetMask = State.ActiveTargetMask;
 
-                    const PlaneExtent StackSeat = PresentCard(Surface, SheetMargin, CardExtent, Sheet,
-                                                              "LayersPane \xC2\xB7 Suzanne");
+                    const PlaneExtent StackSeat = PresentCard(Surface, SheetMargin, 730.0f, Sheet, "LayersPane \xC2\xB7 Suzanne");
                     StackPanel.Advance(Surface, StackSeat, SeatedLayers, 4u, Depot);
 
-                    const PlaneExtent InspectorSeat = PresentCard(Surface, SheetMargin + CardExtent + CardGap, CardExtent, Sheet,
-                                                                  State.Seat == 0u ? "ChannelPropertyPanel \xC2\xB7 Brushed Copper"
-                                                                                  : "MaskPropertyPanel \xC2\xB7 Edge Wear");
-                    if (State.Seat == 0u)
-                        ChannelPanel.Advance(Surface, InspectorSeat, Channels, Depot);
-                    else
+                    const PlaneExtent InspectorSeat = PresentCard(Surface, SheetMargin + 730.0f + CardGap, 730.0f, Sheet,
+                                                                  State.Seat == 1u ? "MaskPropertyPanel \xC2\xB7 Edge Wear"
+                                                                                  : "ChannelPropertyPanel \xC2\xB7 Brushed Copper");
+                    if (State.Seat == 1u)
                         MaskPanel.Advance(Surface, InspectorSeat, MaskSheet, Depot);
+                    else if (State.Seat == 0u)
+                        ChannelPanel.Advance(Surface, InspectorSeat, Channels, Depot);
                 }
                 else
                 {
-                    CadPanel.Advance(Surface, Desk, CadSeed.Enclosures, 3u, Composition, Depot);
+                    // ②① The CAD drafting seats — the scene directory beside the metadata pane, the carousel beside them.
+                    const OutlinerRowDeclaration* Inspected = Drafting.Find("r008");
+                    ProfileOrdinates Profile;
+                    if (Inspected != nullptr)
+                        SeatProfile(Profile, *Inspected);
+
+                    OutlinerPanel Directory;
+                    Directory.SeatTaken("r008");
+                    DraftingPanel DraftingSeat;
+                    const PlaneExtent DraftingCard = PresentCard(Surface, SheetMargin, 810.0f, Sheet,
+                                                                 "DraftingPanel \xC2\xB7 DirectoryPane + MetadataPane");
+                    DraftingSeat.Advance(Surface, DraftingCard, Directory, Drafting.Root, 1u, Inspected, Profile, Depot);
+
+                    PropertiesPanel Properties;
+                    Properties.CarouselMode = State.Seat == 4u ? 1u : 0u;
+                    const PlaneExtent PropertiesCard = PresentCard(Surface, SheetMargin + 810.0f + CardGap, 690.0f, Sheet,
+                                                                   State.Seat == 4u ? "Inspector \xC2\xB7 History"
+                                                                                    : "Inspector \xC2\xB7 Properties");
+                    Properties.Advance(Surface, PropertiesCard, Inspected, Profile, Depot,
+                                       Revisions.Revisions, Revisions.Count, Drafting.Root, 1u);
                 }
 
                 Surface.Seal();

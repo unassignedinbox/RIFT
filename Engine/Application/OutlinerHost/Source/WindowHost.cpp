@@ -1,11 +1,10 @@
 //============================================================================================================================================
 //                                                           WINDOWHOST.CPP
 //============================================================================================================================================
-// 🧩 The interactive standalone outliner — a GLFW window presenting the same seat the headless host dumps.
+// 🧩 The interactive standalone directory — a GLFW window presenting the same seat the headless host dumps.
 // note  Built only where GLFW and an OpenGL development package stand (`make outliner-window`); the headless
 //       build never compiles this file, exactly as the sandbox build does not.
 
-#include "Engine/Application/OutlinerHost/Api/WorldEditorSeat.h"
 #include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
 #include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
@@ -20,43 +19,71 @@
 #include <cstdio>
 #include <cstring>
 
-//------------------------------------------------------------------------------------------------------------------------
-//                                              THE SHARED CONTEXT CONSTRUCTION
-//------------------------------------------------------------------------------------------------------------------------
-
 namespace Rift
 {
 
 /// 🧩 Constructs the context, the default typeface at three crisp sizes, and the styled window chrome.
 /// tag   internal
-void ConstructInterfaceContext()
-{
-    ImGui::CreateContext();
-    ImGuiIO& VendorIO = ImGui::GetIO();
-
-    ImFontConfig BodyConfig;    BodyConfig.SizePixels    = 13.0f;
-    ImFontConfig SmallConfig;   SmallConfig.SizePixels   = 11.0f;
-    ImFontConfig CaptionConfig; CaptionConfig.SizePixels = 10.0f;
-    VendorIO.Fonts->AddFontDefaultVector(&BodyConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&SmallConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&CaptionConfig);
-
-    ImGuiStyle& VendorStyle = ImGui::GetStyle();
-    VendorStyle.WindowRounding    = 0.0f;
-    VendorStyle.WindowPadding     = ImVec2(0.0f, 0.0f);
-    VendorStyle.WindowBorderSize  = 0.0f;
-    VendorStyle.PopupRounding     = 9.0f;
-    VendorStyle.PopupBorderSize   = 1.0f;
-    VendorStyle.ScrollbarSize     = 0.0f;
-    ImVec4* Colours = VendorStyle.Colors;
-    Colours[ImGuiCol_WindowBg]   = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_ChildBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_PopupBg]    = ImVec4(0.063f, 0.063f, 0.071f, 0.98f);
-    Colours[ImGuiCol_Border]     = ImVec4(1.0f, 1.0f, 1.0f, 0.10f);
-    Colours[ImGuiCol_FrameBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-}
+void ConstructInterfaceContext();
 
 }   // namespace Rift
+
+//------------------------------------------------------------------------------------------------------------------------
+//                                                    THE SEED FOREST
+//------------------------------------------------------------------------------------------------------------------------
+
+namespace
+{
+
+using namespace Slate;
+
+constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
+
+/// 🧩 The seed forest, verbatim from the reference's initialStore — Bracket_Rev4.
+/// tag   internal
+struct ForestStand
+{
+    OutlinerRowDeclaration Root[1];
+    OutlinerRowDeclaration Sketches[2];
+    OutlinerRowDeclaration Bracket[3];
+    OutlinerRowDeclaration Bodies[3];
+    OutlinerRowDeclaration Enclosed[2];
+};
+
+/// 🧩 The host-owned disclosures and presences the forest borrows.
+/// tag   internal
+struct SeedStand
+{
+    bool ExpandedRoot     = true;
+    bool ExpandedSketches = true;
+    bool ExpandedBodies   = true;
+    bool ExpandedBracket  = true;
+    bool HiddenSketches   = false;
+    bool HiddenBasePlate  = false;
+};
+
+/// 🧩 Wires the forest against the stand's disclosures and presences.
+/// tag   internal
+void AssembleForest(SeedStand& Stand, ForestStand& Forest)
+{
+    Forest.Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &Stand.HiddenBasePlate, nullptr, 0u };
+    Forest.Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
+
+    Forest.Bracket[0] = { "SOL_Plate",   "r007", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
+    Forest.Bracket[1] = { "SOL_Boss",    "r008", DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
+    Forest.Bracket[2] = { "SOL_Rib",     "r009", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
+
+    Forest.Bodies[0] = { "BODY_Bracket", "r006", DirectoryClassification::Enclosure, &Stand.ExpandedBracket, nullptr, Forest.Bracket, 3u };
+    Forest.Bodies[1] = { "SOL_Housing",  "r010", DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
+    Forest.Bodies[2] = { "SOL_Dome",     "r011", DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
+
+    Forest.Enclosed[0] = { "Sketches", "r002", DirectoryClassification::Enclosure, &Stand.ExpandedSketches, &Stand.HiddenSketches, Forest.Sketches, 2u };
+    Forest.Enclosed[1] = { "Bodies",   "r005", DirectoryClassification::Enclosure, &Stand.ExpandedBodies,   nullptr,               Forest.Bodies,   3u };
+
+    Forest.Root[0] = { "Part", "r001", DirectoryClassification::Scene, &Stand.ExpandedRoot, nullptr, Forest.Enclosed, 2u };
+}
+
+}   // namespace
 
 //------------------------------------------------------------------------------------------------------------------------
 //                                                          ENTRY
@@ -75,7 +102,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* Window = glfwCreateWindow(1500, 860, "RIFT \u2014 World Outliner (standalone)", nullptr, nullptr);
+    GLFWwindow* Window = glfwCreateWindow(400, 760, "RIFT \u2014 Directory (standalone outliner)", nullptr, nullptr);
     if (Window == nullptr)
     {
         std::fprintf(stderr, "WindowHost: the window refused to open\n");
@@ -102,17 +129,11 @@ int main()
                  static_cast<GLsizei>(IconDepot::GlyphExtent), 0, GL_RGBA, GL_UNSIGNED_BYTE, Depot.PictureOrdinates());
     Depot.AdoptIdentity(reinterpret_cast<void*>(static_cast<std::uintptr_t>(GlyphTexture)));
 
-    OutlinerPanel Outliner;
-    Outliner.Construct(Depot);
-    EntryInspectorPanel Inspector;
-
+    OutlinerPanel Directory;
     SeedStand Stand;
     ForestStand Forest;
     AssembleForest(Stand, Forest);
-
-    std::snprintf(Outliner.TakenIdentity, sizeof Outliner.TakenIdentity, "g_03");
-
-    bool SlideOpen = false;
+    Directory.SeatTaken("r007");
 
     while (glfwWindowShouldClose(Window) == GLFW_FALSE)
     {
@@ -124,30 +145,26 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // ① Tab summons the inspector slide, exactly as the reference binds it.
-        ImGuiIO& VendorIO = ImGui::GetIO();
-        if (VendorIO.KeysDown[ImGuiKey_Tab] && !VendorIO.KeysDownDurationPrevious[ImGuiKey_Tab] &&
-            ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) == false)
-            SlideOpen = !SlideOpen;
-
         int FramebufferAlong = 0;
         int FramebufferAcross = 0;
         glfwGetFramebufferSize(Window, &FramebufferAlong, &FramebufferAcross);
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(FramebufferAlong), static_cast<float>(FramebufferAcross)));
-        ImGui::Begin("RIFT \u2014 World Outliner", nullptr,
+        ImGui::Begin("RIFT \u2014 Directory", nullptr,
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
 
         RecordingSurface Surface;
         if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
         {
-            PresentWorldEditorSeat(Surface,
-                                   Spanning(0.0f, 0.0f, static_cast<float>(FramebufferAlong), static_cast<float>(FramebufferAcross)),
-                                   Outliner, Inspector, Depot, Stand, Forest, SlideOpen);
-            if (Outliner.InspectRaised)
-                SlideOpen = true;
+            WorkspaceInk Sheet;
+            const float DeskAlong = static_cast<float>(FramebufferAlong);
+            const float DeskAcross = static_cast<float>(FramebufferAcross);
+            Surface.Ground(Spanning(0.0f, 0.0f, DeskAlong, DeskAcross), Sheet.DeskGround, 0.0f);
+            const float Margin = (DeskAlong - DirectoryAlong) * 0.5f;
+            Directory.Advance(Surface, Spanning(Margin, 20.0f, DirectoryAlong, DeskAcross - 40.0f),
+                              Forest.Root, 1u, OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
             Surface.Seal();
         }
 

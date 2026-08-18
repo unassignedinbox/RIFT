@@ -12,10 +12,11 @@ SKILL-Formatting throughout).
 
 | Reference (`Slate@f19e4ff`) | C++ unit | Host |
 |---|---|---|
-| `References/remix-remix-global-ui/components/GameOutliner.tsx` | `Engine/SlateUI/Interface/OutlinerPanel` — general-purpose, declaration-driven outliner + entry inspector | `OutlinerHost` (standalone) |
-| `References/remix-remix-global-ui/components/TexturePaint.tsx` | `Engine/SlateUI/Interface/TexturePaintPanel` — `LayersPane`, `ChannelPropertyPanel`, `MaskPropertyPanel` | `PanelValidationHost` |
-| `References/remix-remix-global-ui/app/globals.css` + `components/Controls.tsx` | `Engine/SlateUI/Interface/ThemeSpecification` (the control-panel theme tokens) + `ControlPanel` (the widget kit) | both |
-| `References/Cad` (Frontier CAD workspace) | `Engine/SlateUI/Interface/CadPanel` — tab strip, header, browser dock, model stage, inspector dock | `PanelValidationHost` |
+| `remix-remix-global-ui/components/DirectoryPane.tsx` | `Engine/SlateUI/Interface/OutlinerPanel` — the scene directory, the general-purpose outliner | `OutlinerHost` (standalone) and reused inside `DraftingPanel` |
+| `remix-remix-global-ui/components/Inspector.tsx` | `Engine/SlateUI/Interface/PropertiesPanel` — record cards + the **Properties / History carousel** | `PanelValidationHost` |
+| `remix-remix-global-ui/components/MetadataPane.tsx` + `page.tsx` drafting seat | `Engine/SlateUI/Interface/DraftingPanel` — directory + Properties & Actions bar + metadata pane | `PanelValidationHost` |
+| `remix-remix-global-ui/components/TexturePaint.tsx` | `Engine/SlateUI/Interface/TexturePaintPanel` — `LayersPane`, `ChannelPropertyPanel`, `MaskPropertyPanel` | `PanelValidationHost` |
+| `remix-remix-global-ui/app/globals.css` + `components/Controls.tsx` | `Engine/SlateUI/Interface/ThemeSpecification` (the control-panel theme tokens) + `ControlPanel` (the shared widget kit — every field row in every panel is a `ControlPanel` widget) | both |
 
 The reference folders themselves are vendored unmodified under `References/` as the comparison of record.
 
@@ -26,18 +27,17 @@ make                # builds Build/OutlinerHost and Build/PanelValidationHost
 make proof          # runs both headlessly and encodes VisualProof/*.png
 ```
 
-- **`OutlinerHost`** — the standalone general-purpose outliner, seated in the reference's world-editor
-  composition (top bar, options menu, weave-lattice viewport, docked inspector slide). Runs three scripted
-  states: `world-editor`, `outliner-run` (retention filter `light`), `inspector` (entry components).
-- **`OutlinerWindowHost`** (`make outliner-window`) — the interactive variant: the same seat behind a GLFW
-  window (Tab summons the inspector slide, double-press inspects). Requires local GLFW + OpenGL dev packages;
-  the headless build never compiles it. One composition (`WorldEditorSeat`), two hosts.
-- **`PanelValidationHost`** — the validation: runs the texture-paint panels (`texturepaint-layers`,
-  `texturepaint-mask`, `texturepaint-reorder` — a scripted live drag under a real pointer press) and the
-  CAD workspace (`cad-workspace`) exactly as transcribed, for side-by-side comparison. Layer-stack
-  drag-to-reorder is fully interactive: press the top row of a card, travel, drop — the dragged card
-  ghosts at opacity-40, the drop target carries the marker rail, the stack splices on release.
-
+- **`OutlinerHost`** — the **standalone outliner**: the scene directory alone on the desk (no editor chrome,
+  no viewport, no lattice), seeded with the reference's `initialStore` (Bracket_Rev4). Three states:
+  `directory` (SOL_Plate taken), `multiselect` (control-gesture additive selection, "3 sel" pill),
+  `filter` (retention run `sk`).
+- **`OutlinerWindowHost`** (`make outliner-window`) — the interactive variant behind a GLFW window.
+  Requires local GLFW + OpenGL dev packages; the headless build never compiles it.
+- **`PanelValidationHost`** — the validation: the texture-paint panels (`texturepaint-layers`,
+  `texturepaint-mask`, `texturepaint-reorder` — a scripted live drag-to-reorder) and the **CAD drafting
+  panel** (`cad-properties`, `cad-history`) — the scene directory beside the metadata pane, with the
+  record inspector's Properties / History carousel. The outliner inside the CAD panel *is* the standalone
+  `OutlinerPanel`, reused.
 All three hosts share the composition and the seam; the two proof hosts render headlessly: `RasterCodec` translates the recorded ImGui draw data into pixels in software
 (no window, no GPU, no display server), dumps a marked raw frame, and `Tools/EncodeProof.py` encodes the PNG
 (stdlib only). `Tools/ProofProbe.py` reads the proofs back and asserts the seated inks.
