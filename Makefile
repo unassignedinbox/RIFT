@@ -55,3 +55,6 @@ proof: all
 
 clean:
 	rm -rf $(BUILD)
+
+check: proof
+	python3 Tools/AssertProofs.py

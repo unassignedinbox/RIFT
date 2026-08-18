@@ -8,3 +8,4 @@ Build/
 
 # Scratch
 _AgentScratch/
+__pycache__/
