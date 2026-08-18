@@ -1,0 +1,9 @@
+# ThemeSpecification — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "ThemeSpecification"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 Every ink the transcribed panels draw with, resolved from the reference sheets.

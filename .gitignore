@@ -1,0 +1,10 @@
+# Build output
+Build/
+*.o
+*.obj
+
+# Raw proof dumps (PNG proofs are committed; the raw frames are not)
+*.rgba
+
+# Scratch
+_AgentScratch/

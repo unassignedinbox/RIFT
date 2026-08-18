@@ -1,0 +1,9 @@
+# OutlinerPanel — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "OutlinerPanel"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The general-purpose world outliner and entry inspector, transcribed from GameOutliner.tsx.

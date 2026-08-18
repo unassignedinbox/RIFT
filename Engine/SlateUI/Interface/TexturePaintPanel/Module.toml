@@ -1,0 +1,9 @@
+# TexturePaintPanel — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "TexturePaintPanel"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The layer stack, channel property seat and mask property seat, transcribed from TexturePaint.tsx.

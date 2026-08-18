@@ -1,0 +1,9 @@
+# ControlPanel — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "ControlPanel"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 Reusable inspector controls transcribed from the global-interface reference control panel.

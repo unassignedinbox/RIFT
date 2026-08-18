@@ -1,0 +1,9 @@
+# IconDepot — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "IconDepot"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The single dummy glyph every classification icon seat presents, rasterised once and tinted.
