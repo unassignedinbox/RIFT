@@ -33,8 +33,10 @@ make proof          # runs both headlessly and encodes VisualProof/*.png
   window (Tab summons the inspector slide, double-press inspects). Requires local GLFW + OpenGL dev packages;
   the headless build never compiles it. One composition (`WorldEditorSeat`), two hosts.
 - **`PanelValidationHost`** — the validation: runs the texture-paint panels (`texturepaint-layers`,
-  `texturepaint-mask`) and the CAD workspace (`cad-workspace`) exactly as transcribed, for side-by-side
-  comparison against the references.
+  `texturepaint-mask`, `texturepaint-reorder` — a scripted live drag under a real pointer press) and the
+  CAD workspace (`cad-workspace`) exactly as transcribed, for side-by-side comparison. Layer-stack
+  drag-to-reorder is fully interactive: press the top row of a card, travel, drop — the dragged card
+  ghosts at opacity-40, the drop target carries the marker rail, the stack splices on release.
 
 All three hosts share the composition and the seam; the two proof hosts render headlessly: `RasterCodec` translates the recorded ImGui draw data into pixels in software
 (no window, no GPU, no display server), dumps a marked raw frame, and `Tools/EncodeProof.py` encodes the PNG
