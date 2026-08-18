@@ -127,8 +127,16 @@ public:
 
 private:
 
-    float ScrollAcross = 0.0f;   // [px] - list scroll ordinate
+    float          ScrollAcross  = 0.0f;    // [px] - list scroll ordinate
+    std::int32_t   DragOrdinal   = -1;      // [-]  - the layer under a live reorder drag
+    float          DragBoundaryAcross = -1.0e9f;   // [px] - the drop boundary's across ordinate
+
+    /// 🧩 Whether a reorder drag stands held this tick.
+    /// cost  ✔️
+    /// tag   internal, nonallocating, nonthrowing
+    bool DragStanding() const   { return DragOrdinal >= 0; }
 };
+
 
 //------------------------------------------------------------------------------------------------------------------------
 //                                                 THE CHANNEL PROPERTY SEAT

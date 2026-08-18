@@ -381,6 +381,15 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
     // ①① Card extents are fixed until a card expands, so the cursor runs linearly.
     float CursorAcross = List.LeastAcross - ScrollAcross;
     std::uint32_t OrdinalSeen = 0u;
+
+    // ②② A held drag ends when the primary button rises; the splice lands at the tracked boundary.
+    const bool DragReleased = DragOrdinal >= 0 && !ImGui::GetIO().MouseDown[0];
+    std::uint32_t PresentedOrdinals[16];
+    std::uint32_t PresentedCountLocal = 0u;   // [-]  - presented layer ordinals, in list order
+    std::uint32_t InsertionPresented  = 0u;   // [-]  - insertion seat among the presented ordinals
+    float InsertionBoundary = 1.0e9f;         // [px] - the rail's across ordinate
+    const float PointerAcross = Surface.Pointer().Across;
+    bool BoundaryTaken = false;
     for (std::uint32_t Ordinal = 0u; Ordinal < LayerCount; ++Ordinal)
     {
         LayerOrdinates& Layer = Layers[Ordinal];
@@ -402,6 +411,11 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         if (!Retained)
             continue;
 
+        // ①① Every seat identity carries the layer ordinal — cards never collide in the id space.
+        char CardIdentity[32];
+        std::snprintf(CardIdentity, sizeof CardIdentity, "layer%u", Ordinal);
+        char SeatMould[48];
+
         const double CardDimming = Layer.Shown ? 1.0 : 0.4;
         const bool TakenLayer = ActiveLayer == Ordinal && !ActiveTargetMask;
         const bool TakenMask  = ActiveLayer == Ordinal && ActiveTargetMask;
@@ -410,12 +424,30 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         const PlaneExtent Spine = Spanning(Seat.LeastAlong + 5.0f, CursorAcross, 30.0f, CardExtent + 5.0f);
         const PlaneExtent Card  = Spanning(Spine.MostAlong + 4.0f, CursorAcross, Seat.SpanAlong() - Spine.SpanAlong() - 4.0f - 13.0f, CardExtent);
 
+        if (PresentedCountLocal < 16u)
+            PresentedOrdinals[PresentedCountLocal] = Ordinal;
+        ++PresentedCountLocal;
+
+        // ②② The insertion boundary — the first card whose centre lies below the pointer.
+        if (DragOrdinal >= 0 && Ordinal != static_cast<std::uint32_t>(DragOrdinal) && !BoundaryTaken)
+        {
+            const float CardCentre = Card.LeastAcross + CardExtent * 0.5f;
+            if (PointerAcross < CardCentre)
+            {
+                InsertionBoundary = Card.LeastAcross;
+                InsertionPresented = PresentedCountLocal - 1u;
+                BoundaryTaken = true;
+            }
+        }
+
         if (Card.LeastAcross >= List.MostAcross || Card.MostAcross <= List.LeastAcross)
         {
             CursorAcross += CardExtent + 5.0f;
             ++OrdinalSeen;
             continue;
         }
+
+
 
         // ② Spine — the 3 px bar and the ordinal medallion.
         const InkOrdinate SpineInk = Layer.Shown ? Covering(Layer.TagPacked) : Sheet.StackSpineVacant;
@@ -447,14 +479,16 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         float ZoneCursor = LayerZone.LeastAlong;
         const PlaneExtent TwistSeat = Spanning(ZoneCursor, Card.LeastAcross + 12.0f, 20.0f, 20.0f);
         bool TwistRoused = false;
-        if (PresentSeat(TwistSeat, "layer.twist", TwistRoused))
+        if (std::snprintf(SeatMould, sizeof SeatMould, "%s.twist", CardIdentity),
+            PresentSeat(TwistSeat, SeatMould, TwistRoused))
             Layer.Expanded = !Layer.Expanded;
         Surface.Chevron(TwistSeat.LeastAlong + 10.0f, TwistSeat.LeastAcross + 10.0f, 4.0f, TwistRoused ? Sheet.InkPrimary : Sheet.InkMuted, Expanded);
         ZoneCursor += 22.0f;
 
         const PlaneExtent EyeSeat = Spanning(ZoneCursor, Card.LeastAcross + 12.0f, 20.0f, 20.0f);
         bool EyeRoused = false;
-        if (PresentSeat(EyeSeat, "layer.eye", EyeRoused))
+        if (std::snprintf(SeatMould, sizeof SeatMould, "%s.eye", CardIdentity),
+            PresentSeat(EyeSeat, SeatMould, EyeRoused))
             Layer.Shown = !Layer.Shown;
         Surface.EyeGlyph(EyeSeat.LeastAlong + 10.0f, EyeSeat.LeastAcross + 10.0f, 7.0f, EyeRoused ? Sheet.InkPrimary : Sheet.InkMuted, !Layer.Shown);
         ZoneCursor += 22.0f;
@@ -472,9 +506,15 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         Surface.TextRunClipped(ZoneCursor, Card.LeastAcross + 22.0f, SubRun, Sheet.InkFaint, 10.0f, LayerZone.MostAlong - ZoneCursor - 6.0f);
 
         bool LayerZoneRoused = false;
-        if (PresentSeat(Spanning(LayerZone.LeastAlong, LayerZone.LeastAcross, LayerZone.SpanAlong(), 44.0f), "layer.zone", LayerZoneRoused))
+        if (std::snprintf(SeatMould, sizeof SeatMould, "%s.zone", CardIdentity),
+            PresentSeat(Spanning(LayerZone.LeastAlong, LayerZone.LeastAcross, LayerZone.SpanAlong(), 44.0f), SeatMould, LayerZoneRoused))
         {
             ActiveLayer = Ordinal;  ActiveTargetMask = false;
+        }
+        if (ImGui::IsItemActive() && DragOrdinal < 0 &&
+            ImGui::GetIO().MouseDown[0] && ImGui::GetIO().MouseDragMaxDistanceSqr[0] > 36.0f)
+        {
+            DragOrdinal = static_cast<std::int32_t>(Ordinal);   // 📝 the reorder drag — the press stays held past the zone
         }
         if (LayerZoneRoused && ImGui::IsMouseDoubleClicked(0))
             InspectRaised = true;
@@ -496,7 +536,8 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         {
             const PlaneExtent MaskEye = Spanning(MaskCursor, Card.LeastAcross + 12.0f, 20.0f, 20.0f);
             bool MaskEyeRoused = false;
-            if (PresentSeat(MaskEye, "mask.eye", MaskEyeRoused))
+            if (std::snprintf(SeatMould, sizeof SeatMould, "%s.maskeye", CardIdentity),
+            PresentSeat(MaskEye, SeatMould, MaskEyeRoused))
                 Layer.Mask.Shown = !Layer.Mask.Shown;
             Surface.EyeGlyph(MaskEye.LeastAlong + 10.0f, MaskEye.LeastAcross + 10.0f, 7.0f, MaskEyeRoused ? Sheet.InkPrimary : Sheet.InkMuted, !Layer.Mask.Shown);
             MaskCursor += 22.0f;
@@ -515,18 +556,21 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
 
             const PlaneExtent MaskDismiss = Spanning(MaskZone.MostAlong - 22.0f, Card.LeastAcross + 12.0f, 20.0f, 20.0f);
             bool DismissRoused = false;
-            if (PresentSeat(MaskDismiss, "mask.dismiss", DismissRoused))
+            if (std::snprintf(SeatMould, sizeof SeatMould, "%s.dismiss", CardIdentity),
+            PresentSeat(MaskDismiss, SeatMould, DismissRoused))
                 Layer.Mask.Enabled = false;
             Surface.CrossGlyph(MaskDismiss.LeastAlong + 10.0f, MaskDismiss.LeastAcross + 10.0f, 3.5f, DismissRoused ? Sheet.Danger : Sheet.InkMuted);
         }
         const PlaneExtent TrashSeat = Spanning(MaskZone.MostAlong - 20.0f, Card.LeastAcross + 12.0f, 20.0f, 20.0f);
         bool TrashRoused = false;
-        if (PresentSeat(TrashSeat, "layer.remove", TrashRoused))
+        if (std::snprintf(SeatMould, sizeof SeatMould, "%s.remove", CardIdentity),
+            PresentSeat(TrashSeat, SeatMould, TrashRoused))
             Layer.Removed = true;
         Surface.TrashGlyph(TrashSeat.LeastAlong + 10.0f, TrashSeat.LeastAcross + 10.0f, 6.0f, TrashRoused ? Sheet.Danger : Sheet.InkMuted);
 
         bool MaskZoneRoused = false;
-        if (PresentSeat(Spanning(MaskZone.LeastAlong, MaskZone.LeastAcross, MaskZone.SpanAlong() - 22.0f, 44.0f), "mask.zone", MaskZoneRoused))
+        if (std::snprintf(SeatMould, sizeof SeatMould, "%s.maskzone", CardIdentity),
+            PresentSeat(Spanning(MaskZone.LeastAlong, MaskZone.LeastAcross, MaskZone.SpanAlong() - 22.0f, 44.0f), SeatMould, MaskZoneRoused))
         {
             ActiveLayer = Ordinal;  ActiveTargetMask = true;
         }
@@ -557,8 +601,8 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
                 std::uint32_t TransferOrdinal = 0u;
                 for (std::uint32_t Seek = 0u; Seek < 7u; ++Seek)
                     if (std::strcmp(TransferCaptions[Seek], Layer.Transfer) == 0) TransferOrdinal = Seek;
-                PresentPickbar(Surface, PickSeat, TransferCaptions[TransferOrdinal], "layer.transfer");
-                ImGui::PushID("layer.transfer");
+                PresentPickbar(Surface, PickSeat, TransferCaptions[TransferOrdinal], CardIdentity);
+                ImGui::PushID(CardIdentity);
                 if (ImGui::BeginPopup("pick"))
                 {
                     for (std::uint32_t Seek = 0u; Seek < 7u; ++Seek)
@@ -571,7 +615,7 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
             RowAcross += 32.0f;
             Surface.TextRun(LeftColumn.LeastAlong + 8.0f, CentredAcross(Spanning(0, RowAcross, 0, 26), Surface.RunExtent(10.0f)), "Opac", Sheet.InkMuted, 10.0f);
             PresentChannelSlider(Surface, Spanning(LeftColumn.LeastAlong + 60.0f, RowAcross, LeftColumn.SpanAlong() - 68.0f, 26.0f),
-                                 Layer.Opacity, 0.0, 100.0, 0u, "%", "layer.opac");
+                                 Layer.Opacity, 0.0, 100.0, 0u, "%", CardIdentity);
             RowAcross += 34.0f;
             Surface.TextRun(LeftColumn.LeastAlong + 8.0f, RowAcross + 4.0f, "CHANNELS", Sheet.InkFaint, 10.0f);
             RowAcross += 20.0f;
@@ -591,7 +635,7 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
             RowAcross += 26.0f;
             const PlaneExtent FullSeat = Spanning(LeftColumn.LeastAlong + 8.0f, RowAcross, LeftColumn.SpanAlong() - 16.0f, 26.0f);
             bool FullRoused = false;
-            if (PresentSeat(FullSeat, "layer.full", FullRoused))
+            if (PresentSeat(FullSeat, CardIdentity, FullRoused))
             {
                 ActiveLayer = Ordinal;  ActiveTargetMask = false;  InspectRaised = true;
             }
@@ -606,7 +650,7 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
             {
                 const PlaneExtent AddSeat = Spanning(RightColumn.LeastAlong + 14.0f, RightColumn.LeastAcross + 40.0f, 88.0f, 26.0f);
                 bool AddMaskRoused = false;
-                if (PresentSeat(AddSeat, "mask.add", AddMaskRoused))
+                if (PresentSeat(AddSeat, CardIdentity, AddMaskRoused))
                     Layer.Mask.Enabled = true;
                 Surface.Ground(AddSeat, Sheet.Marker, 6.0f);
                 Surface.TextRun(Surface.CentredAlong(AddSeat, "Add Mask", 10.0f), CentredAcross(AddSeat, Surface.RunExtent(10.0f)), "Add Mask",
@@ -616,12 +660,12 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
             {
                 Surface.TextRun(RightColumn.LeastAlong + 8.0f, CentredAcross(Spanning(0, MaskRowAcross, 0, 26), Surface.RunExtent(10.0f)), "Str", Sheet.InkMuted, 10.0f);
                 PresentChannelSlider(Surface, Spanning(RightColumn.LeastAlong + 60.0f, MaskRowAcross, RightColumn.SpanAlong() - 68.0f, 26.0f),
-                                     Layer.Mask.Strength, 0.0, 100.0, 0u, "%", "mask.str");
+                                     Layer.Mask.Strength, 0.0, 100.0, 0u, "%", CardIdentity);
                 MaskRowAcross += 32.0f;
                 Surface.TextRun(RightColumn.LeastAlong + 8.0f, CentredAcross(Spanning(0, MaskRowAcross, 0, 14), Surface.RunExtent(10.0f)), "Invert", Sheet.InkMuted, 10.0f);
                 const PlaneExtent MiniSwitch = Spanning(RightColumn.LeastAlong + 60.0f, CentredAcross(Spanning(0, MaskRowAcross, 0, 26), 14.0f), 26.0f, 14.0f);
                 bool InvertRoused = false;
-                if (PresentSeat(MiniSwitch, "mask.invert", InvertRoused))
+                if (PresentSeat(MiniSwitch, CardIdentity, InvertRoused))
                     Layer.Mask.Invert = !Layer.Mask.Invert;
                 Surface.Ground(MiniSwitch, Layer.Mask.Invert ? Sheet.Marker : Covering(0x2A2A2Au), 7.0f);
                 Surface.Edge(MiniSwitch, Layer.Mask.Invert ? Sheet.Marker : Covering(0x3A3A3Au), 1.0f, 7.0f);
@@ -639,7 +683,7 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
                 MaskRowAcross += 30.0f;
                 const PlaneExtent FullMaskSeat = Spanning(RightColumn.LeastAlong + 8.0f, MaskRowAcross, RightColumn.SpanAlong() - 16.0f, 26.0f);
                 bool FullMaskRoused = false;
-                if (PresentSeat(FullMaskSeat, "mask.full", FullMaskRoused))
+                if (PresentSeat(FullMaskSeat, CardIdentity, FullMaskRoused))
                 {
                     ActiveLayer = Ordinal;  ActiveTargetMask = true;  InspectRaised = true;
                 }
@@ -651,8 +695,53 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
             }
         }
 
+        // ②② The dragged card ghosts in place at the reference's opacity-40.
+        if (DragOrdinal >= 0 && Ordinal == static_cast<std::uint32_t>(DragOrdinal))
+            Surface.Ground(Card, Partial(0x0B0B0Bu, 0.60), 8.0f);
+
+        // ②② A drag-over card carries the marker rail across its upper edge, painted over the card.
+        if (DragOrdinal >= 0 && Ordinal != static_cast<std::uint32_t>(DragOrdinal) && Surface.PointerWithin(Card))
+            Surface.Ground(Spanning(Card.LeastAlong + 4.0f, Card.LeastAcross - 1.0f, Card.SpanAlong() - 8.0f, 2.0f), Sheet.Marker, 0.0f);
+
         CursorAcross += CardExtent + 5.0f;
         ++OrdinalSeen;
+    }
+
+    // ②② The append boundary when the pointer rests past every card.
+    if (DragOrdinal >= 0 && !BoundaryTaken)
+    {
+        InsertionBoundary = CursorAcross - 2.5f;
+        InsertionPresented = PresentedCountLocal;
+    }
+
+    // ②② Draw the rail, then splice on release.
+    if (DragOrdinal >= 0 && InsertionBoundary > -1.0e8f && InsertionBoundary < 1.0e8f)
+        Surface.Ground(Spanning(List.LeastAlong + 6.0f, InsertionBoundary, List.SpanAlong() - 12.0f, 2.0f), Sheet.Marker, 0.0f);
+
+    if (DragReleased)
+    {
+        const std::uint32_t DraggedOrdinal = static_cast<std::uint32_t>(DragOrdinal);
+        const bool DropOnSelfAfter  = InsertionPresented > 0u &&
+                                      PresentedOrdinals[InsertionPresented - 1u] == DraggedOrdinal;
+        const bool DropOnSelfBefore = InsertionPresented < PresentedCountLocal &&
+                                      PresentedOrdinals[InsertionPresented] == DraggedOrdinal;
+        if (!DropOnSelfAfter && !DropOnSelfBefore)
+        {
+            // ① splice: carry the dragged layer out, open its seat, lower it in.
+            const LayerOrdinates Carried = Layers[DraggedOrdinal];
+            for (std::uint32_t Seek = DraggedOrdinal; Seek + 1u < LayerCount; ++Seek)
+                Layers[Seek] = Layers[Seek + 1u];
+            std::uint32_t SeatOrdinal = LayerCount - 1u;
+            if (InsertionPresented < PresentedCountLocal)
+            {
+                const std::uint32_t TargetOrdinal = PresentedOrdinals[InsertionPresented];
+                SeatOrdinal = TargetOrdinal > DraggedOrdinal ? TargetOrdinal - 1u : TargetOrdinal;
+            }
+            for (std::uint32_t Seek = LayerCount - 1u; Seek > SeatOrdinal; --Seek)
+                Layers[Seek] = Layers[Seek - 1u];
+            Layers[SeatOrdinal] = Carried;
+        }
+        DragOrdinal = -1;
     }
 
     const float ContentExtent = static_cast<float>(OrdinalSeen) * 49.0f + 8.0f;

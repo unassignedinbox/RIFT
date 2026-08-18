@@ -49,6 +49,10 @@ GATES = [
         (798, 400, 0x1C1C1C, 12, "section hair edge"),
         (1200, 840, 0x0E0E0E, 8, "mask foot"),
     ]),
+    # ⑤½ PanelValidationHost — texture paint, reorder drag.
+    ("VisualProof/PanelValidationHost/validation-texturepaint-reorder.png", [
+        (400, 403, 0x4A90E2, 14, "insertion rail"),
+    ]),
     # ⑥ PanelValidationHost — CAD workspace.
     ("VisualProof/PanelValidationHost/validation-cad-workspace.png", [
         (800, 19, 0x050505, 6, "tab bar"),

@@ -183,23 +183,47 @@ int main(int ArgumentCount, char** Arguments)
     // ③ The scripted states — one dump each.
     struct ValidationState
     {
-        const char* ShotRun;     // [-] - the dump name
-        std::uint32_t Seat;      // [-] - 0 texture layers, 1 texture mask, 2 CAD
-        std::uint32_t ActiveLayer;   // [-] - taken layer ordinal
-        bool         ActiveTargetMask;   // [-]
-        bool         LayerExpanded;      // [-]
+        const char*  ShotRun;           // [-] - the dump name
+        std::uint32_t Seat;             // [-] - 0 texture layers, 1 texture mask, 2 CAD, 3 texture reorder
+        std::uint32_t ActiveLayer;      // [-] - taken layer ordinal
+        bool          ActiveTargetMask; // [-]
+        bool          LayerExpanded;    // [-]
+        bool          DragScripted;     // [-] - seat a live reorder drag under the pointer
     };
-    const ValidationState States[3] =
+    const ValidationState States[4] =
     {
-        { "texturepaint-layers",  0u, 0u, false, true  },
-        { "texturepaint-mask",    1u, 0u, true,  false },
-        { "cad-workspace",        2u, 0u, false, false },
+        { "texturepaint-layers",  0u, 0u, false, true,  false },
+        { "texturepaint-mask",    1u, 0u, true,  false, false },
+        { "cad-workspace",        2u, 0u, false, false, false },
+        { "texturepaint-reorder", 3u, 1u, false, false, true  },
     };
 
     for (const ValidationState& State : States)
     {
         for (int Warm = 0; Warm < 3; ++Warm)
         {
+            // ①① The scripted pointer: a press on the Dirt Pass zone that travels to the Base Metal card.
+            if (State.DragScripted)
+            {
+                const ImVec2 PressSeat(250.0f, 330.0f);   // [px] - the Dirt Pass zone
+                const ImVec2 DropSeat(250.0f, 380.0f);     // [px] - between Scratches and Base Metal
+                if (Warm == 0)
+                {
+                    VendorIO.MousePos = PressSeat;
+                    VendorIO.AddMouseButtonEvent(0, true);
+                }
+                else
+                {
+                    VendorIO.MousePos = DropSeat;
+                }
+            }
+            else
+            {
+                VendorIO.MousePos = ImVec2(-1.0e5f, -1.0e5f);
+                if (Warm == 0)
+                    VendorIO.AddMouseButtonEvent(0, false);
+            }
+
             ImGui::NewFrame();
 
             ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
@@ -220,7 +244,20 @@ int main(int ArgumentCount, char** Arguments)
                     : "RIFT \u2014 Panel Validation \xC2\xB7 Texture Paint (References/remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
                 Surface.TextRun(SheetMargin, 8.0f, TitleRun, Sheet.InkMuted, 12.5f);
 
-                if (State.Seat == 0u || State.Seat == 1u)
+                if (State.Seat == 3u)
+                {
+                    // ①① The reorder seat — the drag travels live; the dump ghosts the card and rails the drop.
+                    LayerOrdinates SeatedLayers[6];
+                    SeatLayers(SeatedLayers);
+                    StackPanel.ActiveLayer = State.ActiveLayer;
+                    StackPanel.ActiveTargetMask = State.ActiveTargetMask;
+
+                    const PlaneExtent StackSeat = PresentCard(Surface, SheetMargin, CardExtent, Sheet,
+                                                              "LayersPane \xC2\xB7 reorder drag");
+                    StackPanel.Advance(Surface, StackSeat, SeatedLayers, 4u, Depot);
+                    (void)Channels; (void)MaskSheet;
+                }
+                else if (State.Seat == 0u || State.Seat == 1u)
                 {
                     LayerOrdinates SeatedLayers[6];
                     SeatLayers(SeatedLayers);
