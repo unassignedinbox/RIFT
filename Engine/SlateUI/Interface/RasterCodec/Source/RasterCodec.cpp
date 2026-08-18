@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdint>
+#include <filesystem>
+#include <system_error>
 
 namespace Slate
 {
@@ -235,6 +237,133 @@ Deliver<bool> RasterCodec::WriteRawDump(const PixelSpace& Extent, const char* Pa
     const std::uint32_t Header[2] = { Extent.AlongExtent, Extent.AcrossExtent };
     std::fwrite(Header, sizeof(std::uint32_t), 2u, Stream);
     std::fwrite(Extent.Ordinates.data(), 1u, Extent.Ordinates.size(), Stream);
+    std::fclose(Stream);
+    return Deliver<bool>::Delivered(true);
+}
+
+namespace
+{
+
+/// 🧩 The CRC-32 of one run, polynomial 0xEDB88320, table-driven.
+/// cost  🚩
+std::uint32_t CyclicRedundancyCheck(const std::uint8_t* Run, std::size_t Extent)
+{
+    static std::uint32_t Standing[256];
+    static bool Seated = false;
+    if (!Seated)
+    {
+        for (std::uint32_t Ordinal = 0u; Ordinal < 256u; ++Ordinal)
+        {
+            std::uint32_t Remainder = Ordinal;
+            for (int Cycle = 0; Cycle < 8; ++Cycle)
+                Remainder = (Remainder & 1u) ? (Remainder >> 1) ^ 0xEDB88320u : (Remainder >> 1);
+            Standing[Ordinal] = Remainder;
+        }
+        Seated = true;
+    }
+    std::uint32_t Check = 0xFFFFFFFFu;
+    for (std::size_t Ordinal = 0u; Ordinal < Extent; ++Ordinal)
+        Check = Standing[(Check ^ Run[Ordinal]) & 0xFFu] ^ (Check >> 8);
+    return Check ^ 0xFFFFFFFFu;
+}
+
+/// 🧩 The Adler-32 of one run.
+/// cost  🚩
+std::uint32_t AdlerThirtyTwo(const std::uint8_t* Run, std::size_t Extent)
+{
+    std::uint32_t Lower = 1u;
+    std::uint32_t Upper = 0u;
+    for (std::size_t Ordinal = 0u; Ordinal < Extent; ++Ordinal)
+    {
+        Lower = (Lower + Run[Ordinal]) % 65521u;
+        Upper = (Upper + Lower) % 65521u;
+    }
+    return (Upper << 16) | Lower;
+}
+
+/// 🧩 Writes one big-endian ordinate.
+/// cost  ✔️
+void WriteBigEndian(std::FILE* Stream, std::uint32_t Ordinate)
+{
+    const std::uint8_t Run[4] = { static_cast<std::uint8_t>(Ordinate >> 24), static_cast<std::uint8_t>(Ordinate >> 16),
+                                  static_cast<std::uint8_t>(Ordinate >> 8), static_cast<std::uint8_t>(Ordinate) };
+    std::fwrite(Run, 1u, 4u, Stream);
+}
+
+}   // namespace
+
+Deliver<bool> RasterCodec::WritePortableNetworkGraphic(const PixelSpace& Extent, const char* Path)
+{
+    // ① The directories along the path are created when absent.
+    std::filesystem::path Declared(Path);
+    if (Declared.has_parent_path() && !Declared.parent_path().empty())
+    {
+        std::error_code Outcome;
+        std::filesystem::create_directories(Declared.parent_path(), Outcome);   // 📝 failures surface at fopen below
+    }
+
+    std::FILE* Stream = std::fopen(Path, "wb");
+    if (Stream == nullptr)
+        return Deliver<bool>::Refuse({ RefusalReason::ExtentExhausted, "the proof path refused to open" });
+
+    // ② Scanlines — filter 0, one stride each.
+    const std::size_t Stride = static_cast<std::size_t>(Extent.AlongExtent) * 4u;
+    std::vector<std::uint8_t> Scanlines((static_cast<std::size_t>(Extent.AcrossExtent)) * (Stride + 1u), 0u);
+    for (std::uint32_t Across = 0u; Across < Extent.AcrossExtent; ++Across)
+        std::memcpy(&Scanlines[static_cast<std::size_t>(Across) * (Stride + 1u) + 1u],
+                    &Extent.Ordinates[static_cast<std::size_t>(Across) * Stride], Stride);
+
+    // ③ zlib stream of stored blocks — honest, uncompressed, dependency-free.
+    const std::size_t PayloadExtent = Scanlines.size();
+    std::vector<std::uint8_t> Streamed;
+    Streamed.reserve(PayloadExtent + PayloadExtent / 65535u * 5u + 16u);
+    Streamed.push_back(0x78u);   // [-] - CMF: deflate, 32K window
+    Streamed.push_back(0x01u);   // [-] - FLG: no dictionary, fastest
+    std::size_t Cursor = 0u;
+    while (Cursor < PayloadExtent)
+    {
+        const std::size_t Block = PayloadExtent - Cursor > 65535u ? 65535u : PayloadExtent - Cursor;
+        const bool Terminal = Cursor + Block >= PayloadExtent;
+        Streamed.push_back(Terminal ? 1u : 0u);
+        Streamed.push_back(static_cast<std::uint8_t>(Block & 0xFFu));
+        Streamed.push_back(static_cast<std::uint8_t>(Block >> 8));
+        Streamed.push_back(static_cast<std::uint8_t>(~Block & 0xFFu));
+        Streamed.push_back(static_cast<std::uint8_t>(~Block >> 8));
+        Streamed.insert(Streamed.end(), Scanlines.begin() + static_cast<std::ptrdiff_t>(Cursor),
+                        Scanlines.begin() + static_cast<std::ptrdiff_t>(Cursor + Block));
+        Cursor += Block;
+    }
+    const std::uint32_t Adler = AdlerThirtyTwo(Scanlines.data(), Scanlines.size());
+    Streamed.push_back(static_cast<std::uint8_t>(Adler >> 24));  Streamed.push_back(static_cast<std::uint8_t>(Adler >> 16));
+    Streamed.push_back(static_cast<std::uint8_t>(Adler >> 8));   Streamed.push_back(static_cast<std::uint8_t>(Adler));
+
+    // ④ The chunks — signature, header, payload, end.
+    const auto PresentChunk = [&](const std::uint8_t Tag[4], const std::vector<std::uint8_t>& Body)
+    {
+        WriteBigEndian(Stream, static_cast<std::uint32_t>(Body.size()));
+        std::fwrite(Tag, 1u, 4u, Stream);
+        std::fwrite(Body.data(), 1u, Body.size(), Stream);
+        std::uint32_t Check = CyclicRedundancyCheck(Tag, 4u);
+        // ①① CRC runs over tag then body; the table call per byte keeps it simple and honest.
+        std::vector<std::uint8_t> Joined(Tag, Tag + 4u);
+        Joined.insert(Joined.end(), Body.begin(), Body.end());
+        Check = CyclicRedundancyCheck(Joined.data(), Joined.size());
+        WriteBigEndian(Stream, Check);
+    };
+
+    const std::uint8_t Signature[8] = { 0x89u, 'P', 'N', 'G', '\r', '\n', 0x1Au, '\n' };
+    std::fwrite(Signature, 1u, 8u, Stream);
+
+    std::vector<std::uint8_t> Header;
+    Header.insert(Header.end(), { static_cast<std::uint8_t>(Extent.AlongExtent >> 24), static_cast<std::uint8_t>(Extent.AlongExtent >> 16),
+                                  static_cast<std::uint8_t>(Extent.AlongExtent >> 8), static_cast<std::uint8_t>(Extent.AlongExtent),
+                                  static_cast<std::uint8_t>(Extent.AcrossExtent >> 24), static_cast<std::uint8_t>(Extent.AcrossExtent >> 16),
+                                  static_cast<std::uint8_t>(Extent.AcrossExtent >> 8), static_cast<std::uint8_t>(Extent.AcrossExtent),
+                                  8u, 6u, 0u, 0u, 0u });
+    PresentChunk(reinterpret_cast<const std::uint8_t*>("IHDR"), Header);
+    PresentChunk(reinterpret_cast<const std::uint8_t*>("IDAT"), Streamed);
+    PresentChunk(reinterpret_cast<const std::uint8_t*>("IEND"), {});
+
     std::fclose(Stream);
     return Deliver<bool>::Delivered(true);
 }

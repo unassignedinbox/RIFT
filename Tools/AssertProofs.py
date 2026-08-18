@@ -13,7 +13,7 @@ from ProofProbe import Decode, Sample
 
 GATES = [
     # ① OutlinerHost — the standalone scene directory.
-    ("VisualProof/OutlinerHost/outliner-directory.png", [
+    ("VisualProof/OutlinerHost/directory.png", [
         (200, 250, 0x17171A, 8, "directory panel ground"),
         (37, 48, 0x000000, 6, "head black tile"),
         (250, 316, 0x232327, 8, "taken row ground (--row-sel)"),
@@ -21,42 +21,42 @@ GATES = [
         (200, 727, 0x101012, 6, "directory foot"),
     ]),
     # ② OutlinerHost — additive selection under control.
-    ("VisualProof/OutlinerHost/outliner-multiselect.png", [
+    ("VisualProof/OutlinerHost/multiselect.png", [
         (87, 316, 0x4A90E2, 45, "first taken rail"),
         (72, 412, 0x4A90E2, 45, "second taken rail"),
         (72, 444, 0x4A90E2, 45, "third taken rail"),
     ]),
     # ③ OutlinerHost — retention run `sk`.
-    ("VisualProof/OutlinerHost/outliner-filter.png", [
+    ("VisualProof/OutlinerHost/filter.png", [
         (150, 188, 0x232327, 8, "retained SK_BasePlate taken row"),
         (150, 250, 0x17171A, 8, "unretained Bodies row vacant"),
     ]),
     # ④ PanelValidationHost — texture paint, layers.
-    ("VisualProof/PanelValidationHost/validation-texturepaint-layers.png", [
+    ("VisualProof/PanelValidationHost/texturepaint-layers.png", [
         (200, 160, 0x121214, 8, "stack head"),
         (700, 205, 0x141414, 8, "add layer ground"),
         (1000, 160, 0x0E0E0E, 8, "channel head"),
         (1500, 350, 0x0E0E0E, 8, "chips region"),
     ]),
     # ⑤ PanelValidationHost — texture paint, mask.
-    ("VisualProof/PanelValidationHost/validation-texturepaint-mask.png", [
+    ("VisualProof/PanelValidationHost/texturepaint-mask.png", [
         (1000, 160, 0x0E0E0E, 8, "mask head"),
         (798, 400, 0x1C1C1C, 12, "section hair edge"),
         (1200, 840, 0x0E0E0E, 8, "mask foot"),
     ]),
     # ⑥ PanelValidationHost — texture paint, reorder drag.
-    ("VisualProof/PanelValidationHost/validation-texturepaint-reorder.png", [
+    ("VisualProof/PanelValidationHost/texturepaint-reorder.png", [
         (400, 403, 0x4A90E2, 14, "insertion rail"),
     ]),
     # ⑦ PanelValidationHost — CAD drafting, properties page.
-    ("VisualProof/PanelValidationHost/validation-cad-properties.png", [
+    ("VisualProof/PanelValidationHost/cad-properties.png", [
         (200, 160, 0x17171A, 8, "directory column ground"),
         (500, 160, 0x101012, 8, "properties bar column"),
         (1046, 217, 0x4A90E2, 16, "carousel properties underline"),
         (900, 263, 0x0A0A0B, 10, "record card ground"),
     ]),
     # ⑧ PanelValidationHost — CAD drafting, history page.
-    ("VisualProof/PanelValidationHost/validation-cad-history.png", [
+    ("VisualProof/PanelValidationHost/cad-history.png", [
         (1394, 217, 0x4A90E2, 16, "carousel history underline"),
         (889, 270, 0x4FD18B, 16, "cylinder revision bubble"),
     ]),

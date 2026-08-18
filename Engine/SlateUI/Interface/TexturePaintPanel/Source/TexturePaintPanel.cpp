@@ -416,7 +416,6 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
         std::snprintf(CardIdentity, sizeof CardIdentity, "layer%u", Ordinal);
         char SeatMould[48];
 
-        const double CardDimming = Layer.Shown ? 1.0 : 0.4;
         const bool TakenLayer = ActiveLayer == Ordinal && !ActiveTargetMask;
         const bool TakenMask  = ActiveLayer == Ordinal && ActiveTargetMask;
         const bool Expanded   = Layer.Expanded;
@@ -808,10 +807,8 @@ void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent&
     for (std::uint32_t Ordinal = 0u; Ordinal < 14u; ++Ordinal)
         if (Ordinates.Enabled[Ordinal]) ++EnabledCount;
 
-    float ChipsHeight = 10.0f + 12.0f + 8.0f + 27.0f + 9.0f;
-    const float ChipsPerRow = 3.0f;
     const float ChipRows = 1.0f + (EnabledCount > 3 ? (EnabledCount - 1) / 3 : 0);
-    ChipsHeight = 18.0f + ChipRows * 33.0f + 9.0f;
+    const float ChipsHeight = 18.0f + ChipRows * 33.0f + 9.0f;
     const PlaneExtent ChipsRegion = Spanning(Seat.LeastAlong + 8.0f, CursorAcross, Seat.SpanAlong() - 16.0f, ChipsHeight);
     Surface.Ground(ChipsRegion, Sheet.SunkenGround, 12.0f);
     Surface.Edge(ChipsRegion, Sheet.HairEdge, 1.0f, 12.0f);

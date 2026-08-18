@@ -212,10 +212,15 @@ PlaneExtent PresentCard(RecordingSurface& Surface, float LeadingAlong, float Tra
 
 int main(int ArgumentCount, char** Arguments)
 {
-    const char* DumpPrefix = "Build/Shots/validation";
+    const char* ProofPrefix = "VisualProof/PanelValidationHost";
+    bool PauseAtEnd = false;
     for (int Ordinal = 1; Ordinal < ArgumentCount; ++Ordinal)
+    {
         if (std::strcmp(Arguments[Ordinal], "--prefix") == 0 && Ordinal + 1 < ArgumentCount)
-            DumpPrefix = Arguments[++Ordinal];
+            ProofPrefix = Arguments[++Ordinal];
+        if (std::strcmp(Arguments[Ordinal], "--pause") == 0)
+            PauseAtEnd = true;
+    }
 
     // ① Context, default typeface at three crisp sizes, atlas seated against the codec.
     ImGui::CreateContext();
@@ -253,7 +258,11 @@ int main(int ArgumentCount, char** Arguments)
     }
 
     IconDepot Depot;
-    Depot.Construct();
+    if (!Depot.Construct().ContentPresent())
+    {
+        std::fprintf(stderr, "PanelValidationHost: the glyph depot refused to construct\n");
+        return 1;
+    }
     Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
                                           Depot.PictureOrdinates() });
 
@@ -392,14 +401,27 @@ int main(int ArgumentCount, char** Arguments)
             {
                 PixelSpace Extent{ DisplayAlong, DisplayAcross, {} };
                 Codec.Rasterize(ImGui::GetDrawData(), Extent);
-                char DumpPath[256];
-                std::snprintf(DumpPath, sizeof DumpPath, "%s-%s.rgba", DumpPrefix, State.ShotRun);
-                Codec.WriteRawDump(Extent, DumpPath);
-                std::printf("PanelValidationHost: %s seated\n", DumpPath);
+                char ProofPath[256];
+                std::snprintf(ProofPath, sizeof ProofPath, "%s/%s.png", ProofPrefix, State.ShotRun);
+                const Deliver<bool> Written = Codec.WritePortableNetworkGraphic(Extent, ProofPath);
+                char RawPath[256];
+                std::snprintf(RawPath, sizeof RawPath, "Build/Shots/%s.rgba", State.ShotRun);
+                Codec.WriteRawDump(Extent, RawPath);   // 📝 the raw dump feeds the repository's small encoder
+                if (Written.ContentPresent())
+                    std::printf("%s: %s seated\n", "PanelValidationHost", ProofPath);
+                else
+                    std::fprintf(stderr, "%s: %s refused — %s\n", "PanelValidationHost", ProofPath, Written.Declined().Run);
             }
         }
     }
 
     ImGui::DestroyContext();
+
+    std::printf("PanelValidationHost: every proof seated under %s\n", ProofPrefix);
+    if (PauseAtEnd)
+    {
+        std::printf("PanelValidationHost: press enter to close\n");
+        std::fgetc(stdin);
+    }
     return 0;
 }

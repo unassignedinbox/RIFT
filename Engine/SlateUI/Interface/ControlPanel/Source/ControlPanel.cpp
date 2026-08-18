@@ -193,6 +193,7 @@ bool PresentRetentionField(RecordingSurface& Surface, const PlaneExtent& Seat, c
     ImGui::PopStyleColor(3);
     ImGui::PopID();
 
+    (void)RunInk;   // 📝 the entry presents its run through the context's own text colour
     if (!Vacant && ImGui::IsItemFocused())
         Surface.Edge(Seat, FieldEdge, 1.0f, 6.0f);
     return ImGui::IsItemFocused() || (Held && ImGui::IsItemActive());
@@ -451,6 +452,8 @@ void PresentColourRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
         SeatedOpen = !SeatedOpen;
 
     Surface.Ground(Pill, Sheet.FieldSunken, 18.0f);
+    if (Roused)
+        Surface.Edge(Pill, Sheet.HairEdgeStrong, 1.0f, 18.0f);
     const InkOrdinate Swatch = InkOrdinate{ Ordinates[0], Ordinates[1], Ordinates[2], Ordinates[3] };
     Surface.Medallion(Pill.LeastAlong + 20.0f, Pill.LeastAcross + Pill.SpanAcross() * 0.5f, 9.0f, Swatch);
 

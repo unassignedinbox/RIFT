@@ -45,16 +45,19 @@ $(BUILD)/PanelValidationHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) Engine/Applicat
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
 proof: all
-	mkdir -p VisualProof/OutlinerHost VisualProof/PanelValidationHost
+	mkdir -p VisualProof/OutlinerHost VisualProof/PanelValidationHost $(BUILD)/Shots
 	rm -f $(BUILD)/Shots/*.rgba
-	$(BUILD)/OutlinerHost --prefix $(BUILD)/Shots/outliner
-	$(BUILD)/PanelValidationHost --prefix $(BUILD)/Shots/validation
-	for Dump in $(BUILD)/Shots/outliner-*.rgba; do \
+	$(BUILD)/OutlinerHost --prefix VisualProof/OutlinerHost
+	$(BUILD)/PanelValidationHost --prefix VisualProof/PanelValidationHost
+	for Dump in $(BUILD)/Shots/directory.rgba $(BUILD)/Shots/multiselect.rgba $(BUILD)/Shots/filter.rgba; do \
 		python3 Tools/EncodeProof.py "$$Dump" "VisualProof/OutlinerHost/$$(basename "$$Dump" .rgba).png"; \
 	done
-	for Dump in $(BUILD)/Shots/validation-*.rgba; do \
+	for Dump in $(BUILD)/Shots/texturepaint-*.rgba $(BUILD)/Shots/cad-*.rgba; do \
 		python3 Tools/EncodeProof.py "$$Dump" "VisualProof/PanelValidationHost/$$(basename "$$Dump" .rgba).png"; \
 	done
+
+check: proof
+	python3 Tools/AssertProofs.py
 
 clean:
 	rm -rf $(BUILD)
