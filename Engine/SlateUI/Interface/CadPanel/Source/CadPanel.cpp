@@ -208,8 +208,7 @@ void CadWorkspacePanel::Advance(RecordingSurface& Surface, const PlaneExtent& Se
         {
             // ①① Browser — filter field, the seeded forest, the count foot.
             const PlaneExtent FieldSeat = Spanning(Dock.LeastAlong + 10.0f, Dock.LeastAcross + CarouselAcross + 10.0f, Dock.SpanAlong() - 46.0f, 30.0f);
-            char RetentionRun[48] = "";
-            PresentRetentionField(Surface, FieldSeat, RetentionRun, 48u, "Filter outliner...", Sheet.PanelRaised, Sheet.HairEdge,
+            PresentRetentionField(Surface, FieldSeat, BrowserRetentionRun, 48u, "Filter outliner...", Sheet.PanelRaised, Sheet.HairEdge,
                                   Sheet.InkPrimary, Sheet.InkFaint);
             PresentRoundAction(Surface, Spanning(Dock.MostAlong - 38.0f, FieldSeat.LeastAcross, 30.0f, 30.0f), Depot, Sheet.InkMuted,
                                false, "cad.newsketch");
@@ -259,8 +258,7 @@ void CadWorkspacePanel::Advance(RecordingSurface& Surface, const PlaneExtent& Se
             }
 
             const PlaneExtent ToolSearch = Spanning(Dock.LeastAlong + 10.0f, EnvironmentSeat.MostAcross + 10.0f, Dock.SpanAlong() - 20.0f, 28.0f);
-            char ToolRun[48] = "";
-            PresentRetentionField(Surface, ToolSearch, ToolRun, 48u, "Search tools...", Sheet.PanelRaised, Sheet.HairEdge,
+            PresentRetentionField(Surface, ToolSearch, ToolRetentionRun, 48u, "Search tools...", Sheet.PanelRaised, Sheet.HairEdge,
                                   Sheet.InkPrimary, Sheet.InkFaint);
 
             float GroupAcross = ToolSearch.MostAcross + 14.0f;
@@ -368,9 +366,49 @@ void CadWorkspacePanel::Advance(RecordingSurface& Surface, const PlaneExtent& Se
 //                                                       THE BROWSER
 //------------------------------------------------------------------------------------------------------------------------
 
+namespace
+{
+
+/// 🧩 Whether a browser row, or any row it encloses, carries the retention run — browser.js's `matches` semantics.
+/// cost  🚩
+bool BrowserRowRetained(const BrowserRowDeclaration& Row, const char* LoweredSeek)
+{
+    char LoweredCaption[48];
+    std::uint32_t Index = 0u;
+    while (Row.Caption[Index] != '\0' && Index < 47u)
+    {
+        LoweredCaption[Index] = static_cast<char>(std::tolower(static_cast<unsigned char>(Row.Caption[Index])));
+        ++Index;
+    }
+    LoweredCaption[Index] = '\0';
+    if (std::strstr(LoweredCaption, LoweredSeek) != nullptr)
+        return true;
+    for (std::uint32_t Ordinal = 0u; Ordinal < Row.EnclosureCount; ++Ordinal)
+        if (BrowserRowRetained(Row.Enclosed[Ordinal], LoweredSeek))
+            return true;
+    return false;
+}
+
+}   // namespace
+
 void CadWorkspacePanel::PresentBrowserRow(RecordingSurface& Surface, const PlaneExtent& Body, const BrowserRowDeclaration& Row,
                                           std::uint32_t Depth, const IconDepot& Depot, float& CursorAcross)
 {
+    // ① Retention first — an unretained row renders nothing, exactly as the reference's filter.
+    if (BrowserRetentionRun[0] != '\0')
+    {
+        char LoweredSeek[48];
+        std::uint32_t Index = 0u;
+        while (BrowserRetentionRun[Index] != '\0' && Index < 47u)
+        {
+            LoweredSeek[Index] = static_cast<char>(std::tolower(static_cast<unsigned char>(BrowserRetentionRun[Index])));
+            ++Index;
+        }
+        LoweredSeek[Index] = '\0';
+        if (!BrowserRowRetained(Row, LoweredSeek))
+            return;
+    }
+
     CadInk Sheet;
     const float RowExtent = 28.0f;
     const PlaneExtent RowSeat = Spanning(Body.LeastAlong, CursorAcross, Body.SpanAlong(), RowExtent);

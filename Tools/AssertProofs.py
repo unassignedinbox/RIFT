@@ -30,10 +30,10 @@ GATES = [
     # ③ OutlinerHost — inspector slide.
     ("VisualProof/OutlinerHost/outliner-inspector.png", [
         (1000, 100, 0x101012, 8, "inspector head"),
-        (900, 300, 0x0A0A0B, 10, "transform card"),
-        (1316, 322, 0xF4F4F5, 25, "intensity knob"),
-        (1020, 322, 0x8A8A8E, 20, "intensity fill"),
-        (1400, 322, 0x2F2F33, 12, "intensity track"),
+        (900, 200, 0x0A0A0B, 10, "transform card"),
+        (1316, 341, 0xF4F4F5, 25, "intensity knob"),
+        (1020, 341, 0x8A8A8E, 20, "intensity fill"),
+        (1400, 341, 0x2F2F33, 12, "intensity track"),
     ]),
     # ④ PanelValidationHost — texture paint, layers.
     ("VisualProof/PanelValidationHost/validation-texturepaint-layers.png", [

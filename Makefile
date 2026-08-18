@@ -36,7 +36,9 @@ validation: $(BUILD)/PanelValidationHost
 $(BUILD):
 	mkdir -p $(BUILD) $(BUILD)/Shots
 
-$(BUILD)/OutlinerHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) Engine/Application/OutlinerHost/Source/OutlinerHost.cpp | $(BUILD)
+$(BUILD)/OutlinerHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) \
+                       Engine/Application/OutlinerHost/Source/WorldEditorSeat.cpp \
+                       Engine/Application/OutlinerHost/Source/OutlinerHost.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
 $(BUILD)/PanelValidationHost: $(IMGUI_SOURCES) $(ENGINE_SOURCES) Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp | $(BUILD)
@@ -55,6 +57,13 @@ proof: all
 
 clean:
 	rm -rf $(BUILD)
+
+# ① The interactive window host — requires local GLFW and OpenGL development packages
+#    (`pkg-config glfw3 gl`). Not built by default; the sandbox has neither.
+outliner-window: $(IMGUI_SOURCES) $(ENGINE_SOURCES) \
+                 Engine/Application/OutlinerHost/Source/WorldEditorSeat.cpp \
+                 Engine/Application/OutlinerHost/Source/WindowHost.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(shell pkg-config --cflags --libs glfw3 gl) -o $(BUILD)/OutlinerWindowHost
 
 check: proof
 	python3 Tools/AssertProofs.py

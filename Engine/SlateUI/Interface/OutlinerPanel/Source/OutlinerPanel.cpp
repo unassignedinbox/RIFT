@@ -393,7 +393,7 @@ void EntryInspectorPanel::Advance(RecordingSurface& Surface, const PlaneExtent& 
 
     if (CarriesTransform)
     {
-        const PlaneExtent Card = OpenCard(3u * 44.0f + 20.0f + 12.0f, "TRANSFORM");
+        const PlaneExtent Card = OpenCard(31.0f + 10.0f + 3u * 44.0f + 10.0f, "TRANSFORM");
         const ControlRowDeclaration PositionRow = { "Position", 88.0f, 13.5f };
         const ControlRowDeclaration RotationRow = { "Rotation", 88.0f, 13.5f };
         const ControlRowDeclaration ScaleRow    = { "Scale",    88.0f, 13.5f };
@@ -409,8 +409,11 @@ void EntryInspectorPanel::Advance(RecordingSurface& Surface, const PlaneExtent& 
     // ④ The classification card, seated at the reference's declared rows.
     char CardTitle[48];
     std::snprintf(CardTitle, sizeof CardTitle, "%s COMPONENT", ClassificationRun(Declared->Classification));
-    const std::uint32_t RowCount = 4u;
-    const PlaneExtent Card = OpenCard(RowCount * 44.0f + 20.0f + 12.0f, CardTitle);
+    std::uint32_t RowCount = 3u;
+    if (Declared->Classification == OutlinerClassification::Camera ||
+        Declared->Classification == OutlinerClassification::Actor)
+        RowCount = 4u;
+    const PlaneExtent Card = OpenCard(31.0f + 10.0f + static_cast<float>(RowCount) * 44.0f + 10.0f, CardTitle);
     float RowAcross = Card.LeastAcross + 31.0f + 10.0f;
 
     const auto SeatRow = [&]() -> PlaneExtent

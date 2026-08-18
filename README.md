@@ -29,11 +29,14 @@ make proof          # runs both headlessly and encodes VisualProof/*.png
 - **`OutlinerHost`** — the standalone general-purpose outliner, seated in the reference's world-editor
   composition (top bar, options menu, weave-lattice viewport, docked inspector slide). Runs three scripted
   states: `world-editor`, `outliner-run` (retention filter `light`), `inspector` (entry components).
+- **`OutlinerWindowHost`** (`make outliner-window`) — the interactive variant: the same seat behind a GLFW
+  window (Tab summons the inspector slide, double-press inspects). Requires local GLFW + OpenGL dev packages;
+  the headless build never compiles it. One composition (`WorldEditorSeat`), two hosts.
 - **`PanelValidationHost`** — the validation: runs the texture-paint panels (`texturepaint-layers`,
   `texturepaint-mask`) and the CAD workspace (`cad-workspace`) exactly as transcribed, for side-by-side
   comparison against the references.
 
-Both hosts render headlessly: `RasterCodec` translates the recorded ImGui draw data into pixels in software
+All three hosts share the composition and the seam; the two proof hosts render headlessly: `RasterCodec` translates the recorded ImGui draw data into pixels in software
 (no window, no GPU, no display server), dumps a marked raw frame, and `Tools/EncodeProof.py` encodes the PNG
 (stdlib only). `Tools/ProofProbe.py` reads the proofs back and asserts the seated inks.
 

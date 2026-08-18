@@ -43,6 +43,13 @@ public:
     /// tag   api, nonthrowing
     Deliver<bool> Construct();
 
+    /// 🧩 Adopts a renderer-issued picture identity over the raster-issued one.
+    /// note  A windowed host uploads the glyph once and hands its platform handle here; the headless
+    ///       codec resolves the raster-issued identity against the depot ordinates directly.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    void AdoptIdentity(void* ArrivingIdentity)   { GlyphSeat = ArrivingIdentity; }
+
     /// 🧩 The vendor picture identity of the rasterised dummy glyph, for Picture recordings.
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing

@@ -88,6 +88,8 @@ private:
     std::uint32_t  LeftCarousel     = 0u;      // [-] - 0 browser, 1 tools
     std::uint32_t  RightCarousel    = 0u;      // [-] - 0 properties, 1 features, 2 revision
     char           TakenIdentity[24] = "";     // [-] - the taken browser row
+    char           BrowserRetentionRun[48] = "";   // [-] - the browser filter run
+    char           ToolRetentionRun[48]    = "";   // [-] - the tools filter run
     float          BrowserScroll    = 0.0f;    // [px] - browser scroll ordinate
     std::uint32_t  PresentedRows    = 0u;      // [-]  - rows presented this tick
 };

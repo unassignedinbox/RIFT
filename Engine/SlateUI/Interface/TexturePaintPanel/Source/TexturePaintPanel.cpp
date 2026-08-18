@@ -778,14 +778,25 @@ void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent&
             continue;
         const ChannelSlotDeclaration& Slot = Slots[Ordinal];
         const bool Collapsed = Ordinates.Collapsed[Ordinal];
-        float CardExtent = 29.0f;
+        // ①① Card extents seat their content exactly — head, pads, every row band — so no row spills under the next card.
+        float CardExtent = 29.0f + 6.0f;
         if (!Collapsed)
         {
-            CardExtent += 14.0f;
-            if (Slot.Edit == ChannelEdit::Derived)          CardExtent += 44.0f;
-            else if (Ordinates.Source[Ordinal] == 0u)       CardExtent += 32.0f + 40.0f;
-            else if (Ordinates.Source[Ordinal] == 1u)       CardExtent += 40.0f + 46.0f + (Ordinates.TextureSeated[Ordinal] ? 56.0f : 40.0f);
-            else                                            CardExtent += 40.0f + 34.0f + static_cast<float>(Generators[Ordinates.Generator[Ordinal]].ParameterCount) * 32.0f + 8.0f;
+            if (Slot.Edit == ChannelEdit::Derived)
+            {
+                CardExtent += 20.0f + 34.0f + 8.0f;
+            }
+            else
+            {
+                CardExtent += 36.0f;   // [px] - source segments
+                if (Ordinates.Source[Ordinal] == 1u)
+                    CardExtent += 56.0f + 16.0f + (Ordinates.TextureSeated[Ordinal] ? 56.0f : 48.0f);
+                else if (Ordinates.Source[Ordinal] == 2u)
+                    CardExtent += 34.0f + static_cast<float>(Generators[Ordinates.Generator[Ordinal]].ParameterCount) * 32.0f + 6.0f;
+                else
+                    CardExtent += 32.0f;
+                CardExtent += 42.0f + 8.0f;   // [px] - preview row and trailing pad
+            }
         }
         const PlaneExtent Card = Spanning(Seat.LeastAlong + 8.0f, CursorAcross, Seat.SpanAlong() - 16.0f, CardExtent);
 
@@ -895,6 +906,7 @@ void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent&
                             Surface.TextRun(EmptySeat.LeastAlong + Surface.CentredAlong(EmptySeat, "Import base texture", 11.0f),
                                             CentredAcross(EmptySeat, Surface.RunExtent(11.0f)), "Import base texture", Sheet.InkMuted, 11.0f);
                         }
+                        RowAcross += Ordinates.TextureSeated[Ordinal] ? 56.0f : 48.0f;   // 📝 the base slot's band, before the preview
                     }
                     else if (Ordinates.Source[Ordinal] == 2u)
                     {
