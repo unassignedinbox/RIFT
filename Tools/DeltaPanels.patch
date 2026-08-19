@@ -1701,6 +1701,21 @@ index fd68f0c..f35d0e5 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/DraftingPanel/Module.toml b/Engine/SlateUI/Interface/DraftingPanel/Module.toml
+deleted file mode 100644
+index 355d7c5..0000000
+--- a/Engine/SlateUI/Interface/DraftingPanel/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# DraftingPanel — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "DraftingPanel"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 The CAD drafting composition — directory, Properties & Actions bar, metadata pane; from page.tsx's drafting seat.
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 index ea948c9..179de78 100644
 --- a/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
@@ -2064,6 +2079,21 @@ index de2dc08..80b1f01 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/IconDepot/Module.toml b/Engine/SlateUI/Interface/IconDepot/Module.toml
+deleted file mode 100644
+index a7ddc09..0000000
+--- a/Engine/SlateUI/Interface/IconDepot/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# IconDepot — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "IconDepot"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 The single dummy glyph every classification icon seat presents, rasterised once and tinted.
 diff --git a/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 index a0e610b..01b14ee 100644
 --- a/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
@@ -2233,22 +2263,6 @@ index 0000000..cfb9993
 +
 +}   // namespace Reference
 +}   // namespace Slate
-diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Module.toml b/Engine/SlateUI/Interface/InterfaceSequence/Module.toml
-new file mode 100644
-index 0000000..2cd4302
---- /dev/null
-+++ b/Engine/SlateUI/Interface/InterfaceSequence/Module.toml
-@@ -0,0 +1,10 @@
-+# InterfaceSequence — a SlateUI interface unit.
-+# Declarative map only; the standalone build is the Makefile at the repository root.
-+
-+[unit]
-+name    = "InterfaceSequence"
-+product = "StaticLibrary"
-+subject = [ "Interface" ]
-+
-+# 📝 The headless interface tick — adoption, pointer seating, open, seal. The Api names no vendored
-+#    spelling, so hosts stay on the clean side of the partition.
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
 index 0000000..28c7cd5
@@ -2432,6 +2446,21 @@ index b963e12..cc025c7 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Module.toml b/Engine/SlateUI/Interface/OutlinerPanel/Module.toml
+deleted file mode 100644
+index f8b5ef7..0000000
+--- a/Engine/SlateUI/Interface/OutlinerPanel/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# OutlinerPanel — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "OutlinerPanel"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 The general-purpose world outliner and entry inspector, transcribed from GameOutliner.tsx.
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 index ef8bb8c..4359bea 100644
 --- a/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
@@ -2535,10 +2564,6 @@ index e4a1414..f8546a0 100644
  
 +}   // namespace Reference
  }   // namespace Slate
-diff --git a/Engine/SlateUI/Interface/RecordingSurface/Module.toml b/Engine/SlateUI/Interface/PanelExchange/Module.toml
-similarity index 100%
-rename from Engine/SlateUI/Interface/RecordingSurface/Module.toml
-rename to Engine/SlateUI/Interface/PanelExchange/Module.toml
 diff --git a/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp b/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp
 similarity index 87%
 rename from Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp
@@ -2819,6 +2844,21 @@ index 03bf072..1cea956 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Module.toml b/Engine/SlateUI/Interface/PropertiesPanel/Module.toml
+deleted file mode 100644
+index 6c69d92..0000000
+--- a/Engine/SlateUI/Interface/PropertiesPanel/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# PropertiesPanel — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "PropertiesPanel"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 The record inspector with the Properties / History carousel, transcribed from Inspector.tsx.
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 index b74400e..5e439ad 100644
 --- a/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
@@ -2908,6 +2948,21 @@ index 07e910f..f99c276 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/RasterCodec/Module.toml b/Engine/SlateUI/Interface/RasterCodec/Module.toml
+deleted file mode 100644
+index b596463..0000000
+--- a/Engine/SlateUI/Interface/RasterCodec/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# RasterCodec — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "RasterCodec"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 Software raster translation of recorded draw data into display pixels — no window, no GPU.
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 index c3b3ff6..30440d2 100644
 --- a/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
@@ -3072,6 +3127,21 @@ index c3b3ff6..30440d2 100644
 +
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/RecordingSurface/Module.toml b/Engine/SlateUI/Interface/RecordingSurface/Module.toml
+deleted file mode 100644
+index 682c806..0000000
+--- a/Engine/SlateUI/Interface/RecordingSurface/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# RecordingSurface — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "RecordingSurface"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 Primitives in, recorded commands out — the standalone drawing seam over the vendored interface library.
 diff --git a/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h b/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h
 index e00d268..f6b5f75 100644
 --- a/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h
@@ -3160,6 +3230,21 @@ index e4a909d..ce8ad1d 100644
  
 +}   // namespace Reference
  }   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml b/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml
+deleted file mode 100644
+index b269977..0000000
+--- a/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# TexturePaintPanel — a SlateUI interface unit.
+-# Declarative map only; the standalone build is the Makefile at the repository root.
+-
+-[unit]
+-name    = "TexturePaintPanel"
+-product = "StaticLibrary"
+-subject = [ "Interface" ]
+-
+-# 📝 The layer stack, channel property seat and mask property seat, transcribed from TexturePaint.tsx.
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 index 9277536..78cafde 100644
 --- a/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
