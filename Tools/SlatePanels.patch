@@ -25,242 +25,12 @@ index 9511271..84ea8c5 100644
      $Diagnostics = & link.exe @Arguments
  
      if ($LASTEXITCODE -ne 0)
-diff --git a/Engine/Application/Module.toml b/Engine/Application/Module.toml
-index 971a260..502c0b7 100644
---- a/Engine/Application/Module.toml
-+++ b/Engine/Application/Module.toml
-@@ -4,7 +4,7 @@
- [unit]
- name    = "Application"
- product = "Executable"
--subject = [ "ConsoleHost", "PaintHost", "EditorHost", "InterfaceValidationHost" ]
-+subject = [ "ConsoleHost", "PaintHost", "EditorHost", "InterfaceValidationHost", "OutlinerHost", "PanelValidationHost", "OutlinerWindowHost" ]
- 
- # 📝 The host links every unit, so it is the one target where the whole DAG is realised at once. The link
- #    order below is the reverse of the dependency order, which is what the linker resolves against.
-diff --git a/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
-new file mode 100644
-index 0000000..20a6e28
---- /dev/null
-+++ b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
-@@ -0,0 +1,211 @@
-+//============================================================================================================================================
-+//                                                           OUTLINERHOST.CPP
-+//============================================================================================================================================
-+// 🧩 The standalone scene directory — the CAD panel's outliner alone on the desk, no editor, no viewport, no lattice.
-+
-+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
-+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
-+
-+#include <cstdint>
-+#include <cstdio>
-+#include <cstring>
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                          FIGURES
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+namespace
-+{
-+
-+using namespace Slate::Reference;
-+
-+constexpr std::uint32_t DisplayAlong  = 400u;    // [px]
-+constexpr std::uint32_t DisplayAcross = 760u;    // [px]
-+
-+constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
-+constexpr float SheetMargin     = 25.0f;    // [px] - the desk margin
-+
-+/// 🧩 The seed forest, verbatim from the reference's initialStore — Bracket_Rev4.
-+/// note  🔴 Self-referential — never returned by value; the caller owns one and AssembleForest wires it.
-+/// tag   internal
-+struct ForestStand
-+{
-+    OutlinerRowDeclaration Root[1];          // [-] - r001 Part
-+    OutlinerRowDeclaration Sketches[2];      // [-] - r003, r004
-+    OutlinerRowDeclaration Bracket[3];       // [-] - r007, r008, r009
-+    OutlinerRowDeclaration Bodies[3];        // [-] - r006, r010, r011
-+    OutlinerRowDeclaration Enclosed[2];      // [-] - r002 Sketches, r005 Bodies
-+};
-+
-+/// 🧩 The host-owned disclosures and presences the forest borrows.
-+/// tag   internal
-+struct SeedStand
-+{
-+    bool ExpandedRoot     = true;    // [-] - r001
-+    bool ExpandedSketches = true;    // [-] - r002
-+    bool ExpandedBodies   = true;    // [-] - r005
-+    bool ExpandedBracket  = true;    // [-] - r006
-+    bool HiddenSketches   = false;   // [-] - r002
-+    bool HiddenBasePlate  = false;   // [-] - r003
-+};
-+
-+/// 🧩 Wires the forest against the stand's disclosures and presences.
-+/// tag   internal
-+void AssembleForest(SeedStand& Stand, ForestStand& Forest)
-+{
-+    Forest.Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &Stand.HiddenBasePlate, nullptr, 0u };
-+    Forest.Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
-+
-+    Forest.Bracket[0] = { "SOL_Plate",   "r007", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
-+    Forest.Bracket[1] = { "SOL_Boss",    "r008", DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
-+    Forest.Bracket[2] = { "SOL_Rib",     "r009", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
-+
-+    Forest.Bodies[0] = { "BODY_Bracket", "r006", DirectoryClassification::Enclosure, &Stand.ExpandedBracket, nullptr, Forest.Bracket, 3u };
-+    Forest.Bodies[1] = { "SOL_Housing",  "r010", DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
-+    Forest.Bodies[2] = { "SOL_Dome",     "r011", DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
-+
-+    Forest.Enclosed[0] = { "Sketches", "r002", DirectoryClassification::Enclosure, &Stand.ExpandedSketches, &Stand.HiddenSketches, Forest.Sketches, 2u };
-+    Forest.Enclosed[1] = { "Bodies",   "r005", DirectoryClassification::Enclosure, &Stand.ExpandedBodies,   nullptr,               Forest.Bodies,   3u };
-+
-+    Forest.Root[0] = { "Part", "r001", DirectoryClassification::Scene, &Stand.ExpandedRoot, nullptr, Forest.Enclosed, 2u };
-+}
-+
-+/// 🧩 One scripted host state a proof shot seats.
-+/// tag   internal
-+struct HostState
-+{
-+    const char*  ShotRun;              // [-] - the dump name
-+    const char*  TakenRuns[3];         // [-] - the taken tokens, additive past one
-+    const char*  RetentionRun;         // [-] - the retention run seated in the field
-+};
-+
-+}   // namespace
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                          ENTRY
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+int main(int ArgumentCount, char** Arguments)
-+{
-+    const char* ProofPrefix = "VisualProof/OutlinerHost";
-+    bool PauseAtEnd = false;
-+    for (int Ordinal = 1; Ordinal < ArgumentCount; ++Ordinal)
-+    {
-+        if (std::strcmp(Arguments[Ordinal], "--prefix") == 0 && Ordinal + 1 < ArgumentCount)
-+            ProofPrefix = Arguments[++Ordinal];
-+        if (std::strcmp(Arguments[Ordinal], "--pause") == 0)
-+            PauseAtEnd = true;
-+    }
-+
-+    using namespace Slate::Reference;
-+
-+    void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
-+    RasterCodec Codec;
-+    IconDepot Depot;
-+    const bool DepotStanding = false;
-+    (void)DepotStanding;
-+
-+    OutlinerPanel Directory;
-+    SeedStand Stand;
-+    ForestStand Forest;
-+    AssembleForest(Stand, Forest);
-+
-+    const HostState States[3] =
-+    {
-+        { "directory",   { "r007", nullptr, nullptr }, ""   },
-+        { "multiselect", { "r007", "r010", "r011" },   ""   },
-+        { "filter",      { "r003", nullptr, nullptr }, "sk" },
-+    };
-+
-+    InterfaceSequence::SeatFaultReporter();
-+
-+    for (const HostState& State : States)
-+    {
-+        char StageRun[96];
-+        std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s adopt", State.ShotRun);
-+        InterfaceSequence::NameStage(StageRun);
-+        if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
-+        {
-+            std::fprintf(stderr, "OutlinerHost: the interface context refused to adopt\n");
-+            return 1;
-+        }
-+        if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
-+        {
-+            std::fprintf(stderr, "OutlinerHost: the atlas refused to seat\n");
-+            return 1;
-+        }
-+        if (!Depot.Construct().ContentPresent())
-+        {
-+            std::fprintf(stderr, "OutlinerHost: the glyph depot refused to construct\n");
-+            return 1;
-+        }
-+        Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
-+                                              Depot.PictureOrdinates() });
-+
-+        for (int Warm = 0; Warm < 3; ++Warm)
-+        {
-+            InterfaceSequence::SeatPointer(-1.0e5f, -1.0e5f);
-+            if (!InterfaceSequence::OpenTick().ContentPresent())
-+                continue;
-+
-+            PanelExchange Surface;
-+            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
-+            {
-+                // ① The desk ground, then the directory alone.
-+                WorkspaceInk Sheet;
-+                Surface.Ground(Spanning(0.0f, 0.0f, static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross)),
-+                               Sheet.DeskGround, 0.0f);
-+
-+                Directory.TakenCount = 0u;
-+                for (std::uint32_t Ordinal = 0u; Ordinal < 3u && State.TakenRuns[Ordinal] != nullptr; ++Ordinal)
-+                {
-+                    std::snprintf(Directory.TakenIdentities[Directory.TakenCount], sizeof Directory.TakenIdentities[0],
-+                                  "%s", State.TakenRuns[Ordinal]);
-+                    ++Directory.TakenCount;
-+                }
-+                std::snprintf(Directory.RetentionRun, sizeof Directory.RetentionRun, "%s", State.RetentionRun);
-+
-+                Directory.Advance(Surface, Spanning(SheetMargin, SheetMargin, DirectoryAlong,
-+                                                    static_cast<float>(DisplayAcross) - SheetMargin * 2.0f),
-+                                  Forest.Root, 1u, OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
-+                Surface.Seal();
-+            }
-+
-+            std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s tick=%d seal", State.ShotRun, Warm);
-+            InterfaceSequence::NameStage(StageRun);
-+            void* RecordedDrawData = InterfaceSequence::SealTick();
-+
-+            if (Warm == 2)
-+            {
-+                PixelSpace Extent{ DisplayAlong, DisplayAcross, {} };
-+                Codec.Rasterize(RecordedDrawData, Extent);
-+                char ProofPath[256];
-+                std::snprintf(ProofPath, sizeof ProofPath, "%s/%s.png", ProofPrefix, State.ShotRun);
-+                const Deliver<bool> Written = Codec.WritePortableNetworkGraphic(Extent, ProofPath);
-+                char RawPath[256];
-+                std::snprintf(RawPath, sizeof RawPath, "Build/Shots/%s.rgba", State.ShotRun);
-+                Codec.WriteRawDump(Extent, RawPath);   // 📝 the raw dump feeds the repository's small encoder
-+                if (Written.ContentPresent())
-+                    std::printf("OutlinerHost: %s seated\n", ProofPath);
-+                else
-+                    std::fprintf(stderr, "OutlinerHost: %s refused — %s\n", ProofPath, Written.Declined().Run);
-+            }
-+        }
-+
-+        // ①① Each state dismisses its own context — no state inherits another's standing interface.
-+        std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s dismiss", State.ShotRun);
-+        InterfaceSequence::NameStage(StageRun);
-+        InterfaceSequence::Dismiss();
-+    }
-+
-+    std::printf("OutlinerHost: every proof seated under %s\n", ProofPrefix);
-+    if (PauseAtEnd)
-+    {
-+        std::printf("OutlinerHost: press enter to close\n");
-+        std::fgetc(stdin);
-+    }
-+    return 0;
-+}
 diff --git a/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
 new file mode 100644
-index 0000000..87ad707
+index 0000000..f8e2bbe
 --- /dev/null
 +++ b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
-@@ -0,0 +1,237 @@
+@@ -0,0 +1,243 @@
 +//============================================================================================================================================
 +//                                                      OUTLINERWINDOWHOST.CPP
 +//============================================================================================================================================
@@ -272,11 +42,13 @@ index 0000000..87ad707
 +#include "SlateVulkan/Device/HostLifecycle/Api/HostLifecycle.h"
 +
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 +#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdio>
++#include <cstring>
 +
 +//------------------------------------------------------------------------------------------------------------------------
 +//                                                          FIGURES
@@ -454,8 +226,11 @@ index 0000000..87ad707
 +        {
 +            const DisplayCondition& Display = Surface.Display();
 +
++            // ①① 🔴 The seat window is where the panels' widgets stand — without it the directory is a
++            //     painting: visible, but no row, eye or filter field can receive focus or the pointer.
 +            Slate::Reference::PanelExchange PanelRecordSurface;
-+            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent())
++            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent() &&
++                Slate::Reference::InterfaceSequence::OpenSeatWindow(Display.ExtentAlong, Display.ExtentAcross).ContentPresent())
 +            {
 +                Slate::Reference::WorkspaceInk Sheet;
 +                PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
@@ -466,6 +241,7 @@ index 0000000..87ad707
 +                                  Forest.Root, 1u, Slate::Reference::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
 +                if (Directory.InspectRaised)
 +                    Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
++                Slate::Reference::InterfaceSequence::CloseSeatWindow();
 +                PanelRecordSurface.Seal();
 +            }
 +
@@ -498,29 +274,32 @@ index 0000000..87ad707
 +    std::printf("%s \u2014 exited cleanly\n", HostName);
 +    return (Serious == 0u) ? 0 : 1;
 +}
-diff --git a/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
+diff --git a/Engine/Application/PanelValidationWindowHost/Source/PanelValidationWindowHost.cpp b/Engine/Application/PanelValidationWindowHost/Source/PanelValidationWindowHost.cpp
 new file mode 100644
-index 0000000..6b9b15b
+index 0000000..beca431
 --- /dev/null
-+++ b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
-@@ -0,0 +1,409 @@
++++ b/Engine/Application/PanelValidationWindowHost/Source/PanelValidationWindowHost.cpp
+@@ -0,0 +1,389 @@
 +//============================================================================================================================================
-+//                                                      PANELVALIDATIONHOST.CPP
++//                                                  PANELVALIDATIONWINDOWHOST.CPP
 +//============================================================================================================================================
-+// 🧩 Records the texture-paint panels and the CAD drafting panel for direct visual comparison against their references.
++// 🧩 The interactive validation seat — the texture-paint and CAD drafting panels in one live window, every widget real.
++
++#include "Contract/DeliveryContract.h"
++#include "SlateUI/Interface/InterfaceExchange/Api/InterfaceExchange.h"
++#include "SlateUI/Interface/InterfaceExchange/Api/RecordingSurface.h"
++#include "SlateVulkan/Device/HostLifecycle/Api/HostLifecycle.h"
 +
 +#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +#include "SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
-+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-+#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
 +#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
-+#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
++#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
 +
-+#include <cstdint>
 +#include <cstdio>
 +#include <cstring>
 +
@@ -531,28 +310,32 @@ index 0000000..6b9b15b
 +namespace
 +{
 +
-+using namespace Slate::Reference;
++using namespace Slate;
 +
-+constexpr std::uint32_t DisplayAlong  = 1600u;   // [px]
-+constexpr std::uint32_t DisplayAcross = 900u;    // [px]
++constexpr std::uint32_t InitialWidth  = 1700u;   // [px] - three columns of panels
++constexpr std::uint32_t InitialHeight = 950u;    // [px]
 +
-+constexpr float SheetMargin = 40.0f;    // [px] - the sheet's outer margin
-+constexpr float SheetTitle  = 36.0f;    // [px] - the sheet's title strip
-+constexpr float CardGap     = 20.0f;    // [px] - between seated cards
++constexpr const char* WindowTitle = "Slate \u2014 Panel Validation (interactive)";
++constexpr const char* HostName    = "PanelValidationWindowHost";
++
++constexpr float DeskClearInk[4] = { 0.039f, 0.039f, 0.043f, 1.0f };   // [-] - #0a0a0b
++
++constexpr float ModeStripAcross = 44.0f;    // [px] - the workspace-mode strip
 +
 +//------------------------------------------------------------------------------------------------------------------------
 +//                                              THE TEXTURE-PAINT SEED
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+/// 🧩 Seats the four mock layers, verbatim from the reference's mockLayers.
-+/// tag   internal
-+void SeatLayers(LayerOrdinates (&Layers)[6])
++void SeatLayers(Slate::Reference::LayerOrdinates (&Layers)[6])
 +{
++    using Slate::Reference::LayerOrdinates;
++
 +    static const char* const EdgeWearChannels[3]  = { "Base Colour", "Roughness", "Metallic" };
 +    static const char* const DirtPassChannels[2]  = { "Base Colour", "Roughness" };
 +    static const char* const ScratchesChannels[2] = { "Base Colour", "Bump" };
 +    static const char* const BaseMetalChannels[4] = { "Base Colour", "Roughness", "Metallic", "Bump" };
 +
++    Layers[0] = LayerOrdinates{};
 +    std::snprintf(Layers[0].Name, sizeof Layers[0].Name, "Edge Wear");
 +    Layers[0].Content = 0u;  std::snprintf(Layers[0].Transfer, sizeof Layers[0].Transfer, "Multiply");
 +    Layers[0].Opacity = 78.0;  Layers[0].Shown = true;  Layers[0].PaintPacked = 0xF97316u;  Layers[0].TagPacked = 0xEAB308u;
@@ -560,6 +343,7 @@ index 0000000..6b9b15b
 +    Layers[0].Mask.Enabled = true;  std::snprintf(Layers[0].Mask.Source, sizeof Layers[0].Mask.Source, "Generator");
 +    Layers[0].Mask.Strength = 92.0;  Layers[0].Mask.Invert = false;  Layers[0].Mask.Shown = true;
 +
++    Layers[1] = LayerOrdinates{};
 +    std::snprintf(Layers[1].Name, sizeof Layers[1].Name, "Dirt Pass");
 +    Layers[1].Content = 1u;  std::snprintf(Layers[1].Transfer, sizeof Layers[1].Transfer, "Overlay");
 +    Layers[1].Opacity = 45.0;  Layers[1].Shown = true;  Layers[1].PaintPacked = 0x8B5CF6u;  Layers[1].TagPacked = 0xEC4899u;
@@ -567,32 +351,30 @@ index 0000000..6b9b15b
 +    Layers[1].Mask.Enabled = true;  std::snprintf(Layers[1].Mask.Source, sizeof Layers[1].Mask.Source, "Paint");
 +    Layers[1].Mask.Strength = 100.0;  Layers[1].Mask.Invert = true;  Layers[1].Mask.Shown = true;
 +
++    Layers[2] = LayerOrdinates{};
 +    std::snprintf(Layers[2].Name, sizeof Layers[2].Name, "Scratches");
 +    Layers[2].Content = 0u;  std::snprintf(Layers[2].Transfer, sizeof Layers[2].Transfer, "Screen");
 +    Layers[2].Opacity = 60.0;  Layers[2].Shown = false;  Layers[2].PaintPacked = 0xF97316u;  Layers[2].TagPacked = 0x06B6D4u;
 +    Layers[2].Channels = ScratchesChannels;  Layers[2].ChannelCount = 2u;
-+    Layers[2].Mask.Enabled = false;
 +
++    Layers[3] = LayerOrdinates{};
 +    std::snprintf(Layers[3].Name, sizeof Layers[3].Name, "Base Metal");
 +    Layers[3].Content = 1u;  std::snprintf(Layers[3].Transfer, sizeof Layers[3].Transfer, "Normal");
 +    Layers[3].Opacity = 100.0;  Layers[3].Shown = true;  Layers[3].PaintPacked = 0x8B5CF6u;  Layers[3].TagPacked = 0x3B82F6u;
 +    Layers[3].Channels = BaseMetalChannels;  Layers[3].ChannelCount = 4u;
-+    Layers[3].Mask.Enabled = false;
 +}
 +
 +//------------------------------------------------------------------------------------------------------------------------
 +//                                              THE CAD DRAFTING SEED
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+/// 🧩 The CAD drafting seed — the same forest the standalone directory seats, reused by the drafting panel.
-+/// tag   internal
 +struct DraftingStand
 +{
-+    OutlinerRowDeclaration Root[1];
-+    OutlinerRowDeclaration Sketches[2];
-+    OutlinerRowDeclaration Bracket[3];
-+    OutlinerRowDeclaration Bodies[3];
-+    OutlinerRowDeclaration Enclosed[2];
++    Slate::Reference::OutlinerRowDeclaration Root[1];
++    Slate::Reference::OutlinerRowDeclaration Sketches[2];
++    Slate::Reference::OutlinerRowDeclaration Bracket[3];
++    Slate::Reference::OutlinerRowDeclaration Bodies[3];
++    Slate::Reference::OutlinerRowDeclaration Enclosed[2];
 +
 +    bool ExpandedRoot     = true;
 +    bool ExpandedSketches = true;
@@ -602,63 +384,53 @@ index 0000000..6b9b15b
 +    bool HiddenBasePlate  = false;
 +    bool RevisionFoldOpen = true;
 +
-+    /// 🧩 Wires the forest, verbatim from the reference's initialStore.
-+    /// tag   internal
 +    void Assemble()
 +    {
-+        Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &HiddenBasePlate, nullptr, 0u };
-+        Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
++        using Slate::Reference::OutlinerRowDeclaration;
 +
-+        Bracket[0] = { "SOL_Plate",   "r007", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
-+        Bracket[1] = { "SOL_Boss",    "r008", DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
-+        Bracket[2] = { "SOL_Rib",     "r009", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
++        Sketches[0] = { "SK_BasePlate", "r003", Slate::Reference::DirectoryClassification::Sketch,   nullptr, &HiddenBasePlate, nullptr, 0u };
++        Sketches[1] = { "SK_BoltHoles", "r004", Slate::Reference::DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
 +
-+        Bodies[0] = { "BODY_Bracket", "r006", DirectoryClassification::Enclosure, &ExpandedBracket, nullptr, Bracket, 3u };
-+        Bodies[1] = { "SOL_Housing",  "r010", DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
-+        Bodies[2] = { "SOL_Dome",     "r011", DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
++        Bracket[0] = { "SOL_Plate",   "r007", Slate::Reference::DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
++        Bracket[1] = { "SOL_Boss",    "r008", Slate::Reference::DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
++        Bracket[2] = { "SOL_Rib",     "r009", Slate::Reference::DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
 +
-+        Enclosed[0] = { "Sketches", "r002", DirectoryClassification::Enclosure, &ExpandedSketches, &HiddenSketches, Sketches, 2u };
-+        Enclosed[1] = { "Bodies",   "r005", DirectoryClassification::Enclosure, &ExpandedBodies,   nullptr,               Bodies,   3u };
++        Bodies[0] = { "BODY_Bracket", "r006", Slate::Reference::DirectoryClassification::Enclosure, &ExpandedBracket, nullptr, Bracket, 3u };
++        Bodies[1] = { "SOL_Housing",  "r010", Slate::Reference::DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
++        Bodies[2] = { "SOL_Dome",     "r011", Slate::Reference::DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
 +
-+        Root[0] = { "Part", "r001", DirectoryClassification::Scene, &ExpandedRoot, nullptr, Enclosed, 2u };
++        Enclosed[0] = { "Sketches", "r002", Slate::Reference::DirectoryClassification::Enclosure, &ExpandedSketches, &HiddenSketches, Sketches, 2u };
++        Enclosed[1] = { "Bodies",   "r005", Slate::Reference::DirectoryClassification::Enclosure, &ExpandedBodies,   nullptr,               Bodies,   3u };
++
++        Root[0] = { "Part", "r001", Slate::Reference::DirectoryClassification::Scene, &ExpandedRoot, nullptr, Enclosed, 2u };
 +    }
 +
-+    /// 🧩 Finds the row carrying the identity, through the whole forest.
-+    /// cost  🚩
-+    /// tag   internal
-+    const OutlinerRowDeclaration* Find(const char* Identity) const
++    const Slate::Reference::OutlinerRowDeclaration* Find(const char* Identity) const
 +    {
-+        const OutlinerRowDeclaration* Stacks[4] = { Root, Enclosed, Bodies, Bracket };
++        const Slate::Reference::OutlinerRowDeclaration* Stacks[4] = { Root, Enclosed, Bodies, Bracket };
 +        const std::uint32_t Counts[4] = { 1u, 2u, 3u, 3u };
-+        const OutlinerRowDeclaration* Extra[2] = { Sketches, nullptr };
 +        for (std::uint32_t StackOrdinal = 0u; StackOrdinal < 4u; ++StackOrdinal)
 +            for (std::uint32_t Ordinal = 0u; Ordinal < Counts[StackOrdinal]; ++Ordinal)
 +            {
-+                const OutlinerRowDeclaration& Row = Stacks[StackOrdinal][Ordinal];
++                const Slate::Reference::OutlinerRowDeclaration& Row = Stacks[StackOrdinal][Ordinal];
 +                if (std::strcmp(Row.Identity, Identity) == 0)
 +                    return &Row;
 +                for (std::uint32_t Inner = 0u; Inner < Row.EnclosureCount; ++Inner)
 +                    if (std::strcmp(Row.Enclosed[Inner].Identity, Identity) == 0)
 +                        return &Row.Enclosed[Inner];
 +            }
-+        for (std::uint32_t Ordinal = 0u; Ordinal < 2u; ++Ordinal)
-+            if (Extra[Ordinal] != nullptr && std::strcmp(Extra[Ordinal]->Identity, Identity) == 0)
-+                return Extra[Ordinal];
 +        return nullptr;
 +    }
 +};
 +
-+/// 🧩 The revision record, seeded as the reference's generateRevisions seats it.
-+/// tag   internal
 +struct RevisionStand
 +{
 +    static constexpr std::uint32_t RevisionCapacity = 32u;   // [-]
 +
-+    bool Folds[RevisionCapacity] = {};   // [-] - host-owned revision folds
-+    RevisionDeclaration Revisions[RevisionCapacity];
++    bool Folds[RevisionCapacity] = {};
++    Slate::Reference::RevisionDeclaration Revisions[RevisionCapacity];
++    std::uint32_t Count = 0u;
 +
-+    /// 🧩 Seats the revisions — every record's creation pair, plus the seeded edits the fold demonstrates.
-+    /// tag   internal
 +    void Assemble(DraftingStand& Stand)
 +    {
 +        static const char* const CreatedRuns[11] = {
@@ -673,40 +445,41 @@ index 0000000..6b9b15b
 +        std::uint32_t Seated = 0u;
 +        for (std::uint32_t Ordinal = 0u; Ordinal < 11u && Seated + 2u < RevisionCapacity; ++Ordinal)
 +        {
-+            Revisions[Seated++] = { Tokens[Ordinal], RevisionCategory::Start,  CreatedRuns[Ordinal], "Initial state",
++            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Start,  CreatedRuns[Ordinal], "Initial state",
 +                                    "", "System", "", "09:14", "2026-08-17", &Folds[Seated] };
-+            Revisions[Seated++] = { Tokens[Ordinal], RevisionCategory::Create, "Added to scene", "Inserted at origin",
++            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Create, "Added to scene", "Inserted at origin",
 +                                    "", "System", "", "09:19", "2026-08-17", &Folds[Seated] };
 +        }
 +
-+        // ① The seeded edits — the boss cylinder's radius, the plate's draft, the sketch's constraints.
-+        Revisions[Seated++] = { "r008", RevisionCategory::Parameter, "Adjusted radius", "Radius 6.25 \xE2\x86\x92 6.75",
++        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Parameter, "Adjusted radius", "Radius 6.25 \xE2\x86\x92 6.75",
 +                                "Increased radius to match new constraints.", "Alex Chen", "6.75", "10:42", "2026-08-17",
 +                                &Stand.RevisionFoldOpen };
-+        Revisions[Seated++] = { "r008", RevisionCategory::Feature, "Draft angle applied", "Draft angle 3\xC2\xB0",
++        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Feature, "Draft angle applied", "Draft angle 3\xC2\xB0",
 +                                "Customer requested smoother finish.", "Sam Rivera", "3.0", "11:05", "2026-08-17",
 +                                &Folds[Seated] };
-+        Revisions[Seated++] = { "r003", RevisionCategory::Sketch, "Profile constrained", "12 constraints",
++        Revisions[Seated++] = { "r003", Slate::Reference::RevisionCategory::Sketch, "Profile constrained", "12 constraints",
 +                                "Approximated spline from DXF import.", "Maria Rossi", "", "11:31", "2026-08-17",
 +                                &Folds[Seated] };
 +        Count = Seated;
 +    }
-+
-+    std::uint32_t Count = 0u;   // [-] - seated revisions
 +};
 +
-+/// 🧩 One framed card seat on the validation sheet.
-+/// tag   internal
-+PlaneExtent PresentCard(PanelExchange& Surface, float LeadingAlong, float TrailingExtent, const WorkspaceInk& Sheet,
-+                        const char* CaptionRun)
++/// 🧩 Copies the device handles across the layer seam into the attachment the interface declares.
++InterfaceAttachment Attach(const DeviceOffering& Offered)
 +{
-+    const float CardAcross = static_cast<float>(DisplayAcross) - SheetMargin - SheetTitle - 20.0f;
-+    const PlaneExtent Card = Spanning(LeadingAlong, SheetMargin + SheetTitle + 20.0f, TrailingExtent, CardAcross);
-+    Surface.Ground(Card.Inset(0.0f, -6.0f), Partial(0x000000u, 0.35), 18.0f);
-+    Surface.Ground(Card, Sheet.StandingGround, 18.0f);
-+    Surface.Edge(Card, Sheet.HairEdgeStrong, 1.0f, 18.0f);
-+    Surface.TextRun(Card.LeastAlong + 18.0f, Card.LeastAcross - 26.0f, CaptionRun, Sheet.InkFaint, 11.0f);
-+    return Card.Inset(10.0f, 56.0f).Inset(-10.0f, -10.0f);
++    InterfaceAttachment Arriving = {};
++
++    Arriving.Instance                 = Offered.Instance;
++    Arriving.ScoredDevice             = Offered.ScoredDevice;
++    Arriving.ActiveDevice             = Offered.ActiveDevice;
++    Arriving.GraphicsQueue            = Offered.GraphicsQueue;
++    Arriving.GraphicsFamilyOrdinal    = Offered.GraphicsFamilyOrdinal;
++    Arriving.ColourTargetFormat       = Offered.ColourTargetFormat;
++    Arriving.MinimumDisplayImageCount = Offered.MinimumDisplayImageCount;
++    Arriving.DisplayImageCount        = Offered.DisplayImageCount;
++    Arriving.NativeWindowSlot         = Offered.NativeWindowSlot;
++
++    return Arriving;
 +}
 +
 +}   // namespace
@@ -715,203 +488,186 @@ index 0000000..6b9b15b
 +//                                                          ENTRY
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+int main(int ArgumentCount, char** Arguments)
++int main()
 +{
-+    const char* ProofPrefix = "VisualProof/PanelValidationHost";
-+    bool PauseAtEnd = false;
-+    for (int Ordinal = 1; Ordinal < ArgumentCount; ++Ordinal)
++    using namespace Slate;
++
++    HostDeclaration Declared;
++    Declared.Naming              = HostName;
++    Declared.WindowCaption       = WindowTitle;
++    Declared.InitialWidth        = InitialWidth;
++    Declared.InitialHeight       = InitialHeight;
++    Declared.Pacing              = LatencyIntent::SteadyPacing;
++    Declared.DiagnosticRequested = true;
++
++    HostLifecycle Lifetime;
++
++    if (!Lifetime.Construct(Declared).ContentPresent)
++        return 1;
++
++    InterfaceExchange Interface;
++
++    if (!Interface.Construct(Attach(Lifetime.Offering())).ContentPresent)
 +    {
-+        if (std::strcmp(Arguments[Ordinal], "--prefix") == 0 && Ordinal + 1 < ArgumentCount)
-+            ProofPrefix = Arguments[++Ordinal];
-+        if (std::strcmp(Arguments[Ordinal], "--pause") == 0)
-+            PauseAtEnd = true;
++        std::printf("%s \u2014 the interface context was refused\n", HostName);
++        return 1;
 +    }
 +
-+    // ① The interface context adopts; the atlas seats against the codec.
-+    void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
-+    RasterCodec Codec;
-+    IconDepot Depot;
++    RecordingSurface Surface;
 +
-+    // ② The seated ordinates.
-+    LayerOrdinates Layers[6];
++    Slate::Reference::IconDepot Depot;
++
++    if (!Depot.Construct().ContentPresent())
++    {
++        std::printf("%s \u2014 the glyph depot was refused\n", HostName);
++        return 1;
++    }
++    Depot.SeatVectorGlyph();
++
++    // ① The seated ordinates — everything the panels present, owned here, written through by hand.
++    Slate::Reference::LayerOrdinates Layers[6];
 +    SeatLayers(Layers);
-+    ChannelOrdinates Channels;
-+    SeatChannelOrdinates(Channels);
-+    MaskOrdinates MaskSheet;
++
++    Slate::Reference::ChannelOrdinates Channels;
++    Slate::Reference::SeatChannelOrdinates(Channels);
++
++    Slate::Reference::MaskOrdinates MaskSheet;
 +
 +    DraftingStand Drafting;
 +    Drafting.Assemble();
 +    RevisionStand Revisions;
 +    Revisions.Assemble(Drafting);
 +
-+    LayerStackPanel StackPanel;
-+    ChannelPropertyPanel ChannelPanel;
-+    MaskPropertyPanel MaskPanel;
++    Slate::Reference::LayerStackPanel StackPanel;
++    Slate::Reference::ChannelPropertyPanel ChannelPanel;
++    Slate::Reference::MaskPropertyPanel MaskPanel;
++    Slate::Reference::OutlinerPanel Directory;
++    Slate::Reference::DraftingPanel DraftingSeat;
++    Slate::Reference::PropertiesPanel Properties;
++    Slate::Reference::ProfileOrdinates Profile;
 +
-+    // ③ The scripted states — one dump each.
-+    struct ValidationState
++    const Slate::Reference::OutlinerRowDeclaration* Inspected = Drafting.Find("r008");
++    if (Inspected != nullptr)
++        Slate::Reference::SeatProfile(Profile, *Inspected);
++    Directory.SeatTaken("r008");
++
++    std::uint32_t WorkspaceMode = 0u;   // [-] - 0 texture paint, 1 CAD drafting
++    static const char* const ModeCaptions[2] = { "Texture Paint", "CAD Drafting" };
++
++    while (Lifetime.Standing())
 +    {
-+        const char*  ShotRun;           // [-] - the dump name
-+        std::uint32_t Seat;             // [-] - 0 texture layers, 1 texture mask, 2 texture reorder, 3 CAD properties, 4 CAD history
-+        std::uint32_t ActiveLayer;      // [-] - taken layer ordinal
-+        bool          ActiveTargetMask; // [-]
-+        bool          LayerExpanded;    // [-]
-+        bool          DragScripted;     // [-] - seat a live reorder drag under the pointer
-+    };
-+    const ValidationState States[5] =
-+    {
-+        { "texturepaint-layers",  0u, 0u, false, true,  false },
-+        { "texturepaint-mask",    1u, 0u, true,  false, false },
-+        { "texturepaint-reorder", 2u, 1u, false, false, true  },
-+        { "cad-properties",       3u, 0u, false, false, false },
-+        { "cad-history",          4u, 0u, false, false, false },
-+    };
++        const TickPass Pass = Lifetime.Await(DeskClearInk);
 +
-+    InterfaceSequence::SeatFaultReporter();
++        if (Pass.Standing == TickStanding::Closed)
++            break;
 +
-+    for (const ValidationState& State : States)
-+    {
-+        char StageRun[96];
-+        std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s adopt", State.ShotRun);
-+        InterfaceSequence::NameStage(StageRun);
-+        if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
++        if (Lifetime.DeviceRecovered())
 +        {
-+            std::fprintf(stderr, "PanelValidationHost: the interface context refused to adopt\n");
-+            return 1;
-+        }
-+        if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
-+        {
-+            std::fprintf(stderr, "PanelValidationHost: the atlas refused to seat\n");
-+            return 1;
-+        }
-+        if (!Depot.Construct().ContentPresent())
-+        {
-+            std::fprintf(stderr, "PanelValidationHost: the glyph depot refused to construct\n");
-+            return 1;
-+        }
-+        Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
-+                                              Depot.PictureOrdinates() });
++            Interface.Reclaim();
 +
-+        for (int Warm = 0; Warm < 3; ++Warm)
-+        {
-+            // ①① The scripted pointer: a press on the Dirt Pass zone that travels between cards.
-+            if (State.DragScripted)
++            if (!Interface.Construct(Attach(Lifetime.Offering())).ContentPresent)
 +            {
-+                constexpr float PressAlong = 250.0f;   // [px] - the Dirt Pass zone
-+                constexpr float PressAcross = 330.0f;  // [px]
-+                constexpr float DropAlong   = 250.0f;  // [px] - between Scratches and Base Metal
-+                constexpr float DropAcross  = 430.0f;  // [px]
-+                if (Warm == 0)
++                std::printf("%s \u2014 the interface could not be rebuilt on the recovered device\n", HostName);
++                break;
++            }
++            static_cast<void>(Lifetime.DisplayRecovered());
++        }
++        else if (Lifetime.DisplayRecovered())
++        {
++            const DeviceOffering Offered = Lifetime.Offering();
++            if (!Interface.Renegotiate(Offered.MinimumDisplayImageCount, Offered.DisplayImageCount))
++            {
++                std::printf("%s \u2014 the interface declined the restated image counts\n", HostName);
++            }
++        }
++
++        if (Pass.Standing != TickStanding::Recording)
++            continue;
++
++        bool ContentBuilt = Interface.Advance().ContentPresent;
++
++        if (ContentBuilt && !Surface.Adopt().ContentPresent)
++        {
++            Disregard(Interface.Abandon());
++            ContentBuilt = false;
++        }
++
++        if (ContentBuilt)
++        {
++            const DisplayCondition& Display = Surface.Display();
++
++            // ② 🔴 The seat window — every panel's widgets stand in it, so every control below is live.
++            Slate::Reference::PanelExchange PanelRecordSurface;
++            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent() &&
++                Slate::Reference::InterfaceSequence::OpenSeatWindow(Display.ExtentAlong, Display.ExtentAcross).ContentPresent())
++            {
++                Slate::Reference::WorkspaceInk Sheet;
++                PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
++                                          Sheet.DeskGround, 0.0f);
++
++                // ③ The workspace-mode strip — the same segment the reference seats.
++                const Slate::Reference::ControlSheet Controls = Slate::Reference::ControlSheetFromWorkspace(Sheet);
++                Slate::Reference::ControlRowDeclaration ModeRow = { "", 88.0f, 13.5f };
++                PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 16.0f, 12.0f, 336.0f, ModeStripAcross }, Sheet.SunkenGround, 10.0f);
++                Slate::Reference::PresentSegmentRow(PanelRecordSurface,
++                                                    Slate::Reference::PlaneExtent{ 16.0f, 12.0f, 336.0f, ModeStripAcross },
++                                                    ModeRow, ModeCaptions, 2u, WorkspaceMode, Controls, "validation.mode");
++
++                if (WorkspaceMode == 0u)
 +                {
-+                    InterfaceSequence::SeatPointer(PressAlong, PressAcross);
-+                    InterfaceSequence::SeatPrimaryPress();
++                    // ④ Texture paint — the stack, the channel seat, the mask seat, all live.
++                    StackPanel.Advance(PanelRecordSurface,
++                                       Slate::Reference::PlaneExtent{ 16.0f, ModeStripAcross + 20.0f, 500.0f, Display.ExtentAcross - ModeStripAcross - 36.0f },
++                                       Layers, 4u, Depot);
++                    ChannelPanel.Advance(PanelRecordSurface,
++                                         Slate::Reference::PlaneExtent{ 528.0f, ModeStripAcross + 20.0f, 560.0f, Display.ExtentAcross - ModeStripAcross - 36.0f },
++                                         Channels, Depot);
++                    MaskPanel.Advance(PanelRecordSurface,
++                                      Slate::Reference::PlaneExtent{ 1100.0f, ModeStripAcross + 20.0f, 580.0f, Display.ExtentAcross - ModeStripAcross - 36.0f },
++                                      MaskSheet, Depot);
 +                }
 +                else
 +                {
-+                    InterfaceSequence::SeatPointer(DropAlong, DropAcross);
++                    // ⑤ CAD drafting — the directory with metadata beside the properties/history carousel.
++                    DraftingSeat.Advance(PanelRecordSurface,
++                                         Slate::Reference::PlaneExtent{ 16.0f, ModeStripAcross + 20.0f, 820.0f, Display.ExtentAcross - ModeStripAcross - 36.0f },
++                                         Directory, Drafting.Root, 1u, Inspected, Profile, Depot);
++                    Properties.Advance(PanelRecordSurface,
++                                       Slate::Reference::PlaneExtent{ 848.0f, ModeStripAcross + 20.0f, 836.0f, Display.ExtentAcross - ModeStripAcross - 36.0f },
++                                       Inspected, Profile, Depot, Revisions.Revisions, Revisions.Count, Drafting.Root, 1u);
++                }
++
++                Slate::Reference::InterfaceSequence::CloseSeatWindow();
++                PanelRecordSurface.Seal();
++            }
++
++            Surface.Retire();
++
++            if (Interface.Seal().ContentPresent)
++            {
++                if (!Interface.Record(Pass.Recording))
++                {
++                    std::printf("%s \u2014 the interface content was not recorded\n", HostName);
 +                }
 +            }
 +            else
 +            {
-+                InterfaceSequence::SeatPointer(-1.0e5f, -1.0e5f);
-+            }
-+
-+            if (!InterfaceSequence::OpenTick().ContentPresent())
-+                continue;
-+
-+            PanelExchange Surface;
-+            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
-+            {
-+                WorkspaceInk Sheet;
-+                const PlaneExtent Desk = Spanning(0.0f, 0.0f, static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));
-+                Surface.Ground(Desk, Sheet.DeskGround, 0.0f);
-+
-+                const char* TitleRun = State.Seat >= 3u
-+                    ? "Slate \u2014 Panel Validation \xC2\xB7 CAD drafting panel (remix-remix-global-ui \xC2\xB7 DirectoryPane + Inspector \xC2\xB7 transcribed)"
-+                    : "Slate \u2014 Panel Validation \xC2\xB7 Texture Paint (remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
-+                Surface.TextRun(SheetMargin, 8.0f, TitleRun, Sheet.InkMuted, 12.5f);
-+
-+                if (State.Seat <= 2u)
-+                {
-+                    // ②① The texture-paint seats.
-+                    LayerOrdinates SeatedLayers[6];
-+                    SeatLayers(SeatedLayers);
-+                    SeatedLayers[State.ActiveLayer].Expanded = State.LayerExpanded;
-+                    StackPanel.ActiveLayer = State.ActiveLayer;
-+                    StackPanel.ActiveTargetMask = State.ActiveTargetMask;
-+
-+                    const PlaneExtent StackSeat = PresentCard(Surface, SheetMargin, 730.0f, Sheet, "LayersPane \xC2\xB7 Suzanne");
-+                    StackPanel.Advance(Surface, StackSeat, SeatedLayers, 4u, Depot);
-+
-+                    const PlaneExtent InspectorSeat = PresentCard(Surface, SheetMargin + 730.0f + CardGap, 730.0f, Sheet,
-+                                                                  State.Seat == 1u ? "MaskPropertyPanel \xC2\xB7 Edge Wear"
-+                                                                                  : "ChannelPropertyPanel \xC2\xB7 Brushed Copper");
-+                    if (State.Seat == 1u)
-+                        MaskPanel.Advance(Surface, InspectorSeat, MaskSheet, Depot);
-+                    else if (State.Seat == 0u)
-+                        ChannelPanel.Advance(Surface, InspectorSeat, Channels, Depot);
-+                }
-+                else
-+                {
-+                    // ②① The CAD drafting seats — the scene directory beside the metadata pane, the carousel beside them.
-+                    const OutlinerRowDeclaration* Inspected = Drafting.Find("r008");
-+                    ProfileOrdinates Profile;
-+                    if (Inspected != nullptr)
-+                        SeatProfile(Profile, *Inspected);
-+
-+                    OutlinerPanel Directory;
-+                    Directory.SeatTaken("r008");
-+                    DraftingPanel DraftingSeat;
-+                    const PlaneExtent DraftingCard = PresentCard(Surface, SheetMargin, 810.0f, Sheet,
-+                                                                 "DraftingPanel \xC2\xB7 DirectoryPane + MetadataPane");
-+                    DraftingSeat.Advance(Surface, DraftingCard, Directory, Drafting.Root, 1u, Inspected, Profile, Depot);
-+
-+                    PropertiesPanel Properties;
-+                    Properties.CarouselMode = State.Seat == 4u ? 1u : 0u;
-+                    const PlaneExtent PropertiesCard = PresentCard(Surface, SheetMargin + 810.0f + CardGap, 690.0f, Sheet,
-+                                                                   State.Seat == 4u ? "Inspector \xC2\xB7 History"
-+                                                                                    : "Inspector \xC2\xB7 Properties");
-+                    Properties.Advance(Surface, PropertiesCard, Inspected, Profile, Depot,
-+                                       Revisions.Revisions, Revisions.Count, Drafting.Root, 1u);
-+                }
-+
-+                Surface.Seal();
-+            }
-+
-+            std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s tick=%d seal", State.ShotRun, Warm);
-+            InterfaceSequence::NameStage(StageRun);
-+            void* RecordedDrawData = InterfaceSequence::SealTick();
-+
-+            if (Warm == 2)
-+            {
-+                PixelSpace Extent{ DisplayAlong, DisplayAcross, {} };
-+                Codec.Rasterize(RecordedDrawData, Extent);
-+                char ProofPath[256];
-+                std::snprintf(ProofPath, sizeof ProofPath, "%s/%s.png", ProofPrefix, State.ShotRun);
-+                const Deliver<bool> Written = Codec.WritePortableNetworkGraphic(Extent, ProofPath);
-+                char RawPath[256];
-+                std::snprintf(RawPath, sizeof RawPath, "Build/Shots/%s.rgba", State.ShotRun);
-+                Codec.WriteRawDump(Extent, RawPath);   // 📝 the raw dump feeds the repository's small encoder
-+                if (Written.ContentPresent())
-+                    std::printf("%s: %s seated\n", "PanelValidationHost", ProofPath);
-+                else
-+                    std::fprintf(stderr, "%s: %s refused — %s\n", "PanelValidationHost", ProofPath, Written.Declined().Run);
++                Disregard(Interface.Abandon());
 +            }
 +        }
 +
-+        // ①① Each state dismisses its own context — no state inherits another's standing interface.
-+        std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s dismiss", State.ShotRun);
-+        InterfaceSequence::NameStage(StageRun);
-+        InterfaceSequence::Dismiss();
++        if (!Lifetime.Surrender().ContentPresent)
++            break;
 +    }
 +
-+    std::printf("PanelValidationHost: every proof seated under %s\n", ProofPrefix);
-+    if (PauseAtEnd)
-+    {
-+        std::printf("PanelValidationHost: press enter to close\n");
-+        std::fgetc(stdin);
-+    }
-+    return 0;
++    const std::uint32_t Serious = Lifetime.StateDiagnostics();
++
++    Surface.Reset();
++    Interface.Reclaim();
++    Lifetime.Reclaim();
++
++    std::printf("%s \u2014 exited cleanly\n", HostName);
++    return (Serious == 0u) ? 0 : 1;
 +}
 diff --git a/Engine/Contract/Api/PanelContract.h b/Engine/Contract/Api/PanelContract.h
 new file mode 100644
@@ -2254,10 +2010,10 @@ index 0000000..01b14ee
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 new file mode 100644
-index 0000000..54cae25
+index 0000000..cfb9993
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,92 @@
 +//============================================================================================================================================
 +//                                                       INTERFACESEQUENCE.H
 +//============================================================================================================================================
@@ -2332,6 +2088,19 @@ index 0000000..54cae25
 +    /// tag   api, nonallocating, nonthrowing
 +    static void NameStage(const char* StageRun);
 +
++    /// 🧩 Opens the borderless seat window inside an engine-owned tick — no frame of its own.
++    /// note  🔴 The engine's InterfaceExchange owns NewFrame; the seat window is where the reference
++    ///       panels' widgets stand, so they receive focus, keys and the pointer.
++    /// out   Deliver  [-]  refuses when no context stands
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static Deliver<bool> OpenSeatWindow(double DisplayAlong, double DisplayAcross);
++
++    /// 🧩 Closes the seat window opened by OpenSeatWindow.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static void CloseSeatWindow();
++
 +
 +};
 +
@@ -2339,10 +2108,10 @@ index 0000000..54cae25
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
-index 0000000..1ecc971
+index 0000000..28c7cd5
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,127 @@
 +//============================================================================================================================================
 +//                                                       INTERFACESEQUENCE.CPP
 +//============================================================================================================================================
@@ -2406,18 +2175,33 @@ index 0000000..1ecc971
 +    ImGui::GetIO().AddMouseButtonEvent(0, true);
 +}
 +
++Deliver<bool> InterfaceSequence::OpenSeatWindow(double DisplayAlong, double DisplayAcross)
++{
++    if (ImGui::GetCurrentContext() == nullptr)
++        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "no vendored context stands" });
++
++    // ① One borderless window filling the display — the seat every panel's widgets stand in.
++    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
++    ImGui::SetNextWindowSize(ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross)));
++    ImGui::Begin("Slate \u2014 Reference Seat", nullptr,
++                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
++                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar |
++                 ImGuiWindowFlags_NoSavedSettings);
++    return Deliver<bool>::Delivered(true);
++}
++
++void InterfaceSequence::CloseSeatWindow()
++{
++    if (ImGui::GetCurrentContext() == nullptr)
++        return;
++    ImGui::End();
++}
++
 +Deliver<bool> InterfaceSequence::OpenTick()
 +{
 +    ImGuiIO& VendorIO = ImGui::GetIO();
 +    ImGui::NewFrame();
-+
-+    // ① One borderless window filling the display — the seat every panel records against.
-+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-+    ImGui::SetNextWindowSize(VendorIO.DisplaySize);
-+    ImGui::Begin("Slate \u2014 Panel Seat", nullptr,
-+                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
-+    return Deliver<bool>::Delivered(true);
++    return OpenSeatWindow(VendorIO.DisplaySize.x, VendorIO.DisplaySize.y);
 +}
 +
 +void* InterfaceSequence::SealTick()
@@ -6755,253 +6539,6 @@ index 0000000..39d08fa
 +
 +check: proof
 +	python3 Tools/AssertProofs.py
-diff --git a/Tools/AssertProofs.py b/Tools/AssertProofs.py
-new file mode 100644
-index 0000000..2c2949e
---- /dev/null
-+++ b/Tools/AssertProofs.py
-@@ -0,0 +1,86 @@
-+#!/usr/bin/env python3
-+"""AssertProofs — the seated-ink gate over every VisualProof shot.
-+
-+Usage: python3 Tools/AssertProofs.py
-+Every assertion below was verified by hand against the reference sheets; the gate
-+fails loudly if a panel drifts from its seated ink.
-+"""
-+
-+import sys
-+
-+sys.path.insert(0, "Tools")
-+from ProofProbe import Decode, Sample
-+
-+GATES = [
-+    # ① OutlinerHost — the standalone scene directory.
-+    ("VisualProof/OutlinerHost/directory.png", [
-+        (200, 250, 0x17171A, 8, "directory panel ground"),
-+        (37, 48, 0x000000, 6, "head black tile"),
-+        (250, 316, 0x232327, 8, "taken row ground (--row-sel)"),
-+        (87, 316, 0x4A90E2, 45, "taken rail (--accent)"),
-+        (200, 727, 0x101012, 6, "directory foot"),
-+    ]),
-+    # ② OutlinerHost — additive selection under control.
-+    ("VisualProof/OutlinerHost/multiselect.png", [
-+        (87, 316, 0x4A90E2, 45, "first taken rail"),
-+        (72, 412, 0x4A90E2, 45, "second taken rail"),
-+        (72, 444, 0x4A90E2, 45, "third taken rail"),
-+    ]),
-+    # ③ OutlinerHost — retention run `sk`.
-+    ("VisualProof/OutlinerHost/filter.png", [
-+        (150, 188, 0x232327, 8, "retained SK_BasePlate taken row"),
-+        (150, 250, 0x17171A, 8, "unretained Bodies row vacant"),
-+    ]),
-+    # ④ PanelValidationHost — texture paint, layers.
-+    ("VisualProof/PanelValidationHost/texturepaint-layers.png", [
-+        (200, 160, 0x121214, 8, "stack head"),
-+        (700, 205, 0x141414, 8, "add layer ground"),
-+        (1000, 160, 0x0E0E0E, 8, "channel head"),
-+        (1500, 350, 0x0E0E0E, 8, "chips region"),
-+    ]),
-+    # ⑤ PanelValidationHost — texture paint, mask.
-+    ("VisualProof/PanelValidationHost/texturepaint-mask.png", [
-+        (1000, 160, 0x0E0E0E, 8, "mask head"),
-+        (798, 400, 0x1C1C1C, 12, "section hair edge"),
-+        (1200, 840, 0x0E0E0E, 8, "mask foot"),
-+    ]),
-+    # ⑥ PanelValidationHost — texture paint, reorder drag.
-+    ("VisualProof/PanelValidationHost/texturepaint-reorder.png", [
-+        (400, 347, 0x4A90E2, 14, "insertion rail"),
-+    ]),
-+    # ⑦ PanelValidationHost — CAD drafting, properties page.
-+    ("VisualProof/PanelValidationHost/cad-properties.png", [
-+        (200, 160, 0x17171A, 8, "directory column ground"),
-+        (500, 160, 0x101012, 8, "properties bar column"),
-+        (1046, 217, 0x4A90E2, 16, "carousel properties underline"),
-+        (900, 263, 0x0A0A0B, 10, "record card ground"),
-+    ]),
-+    # ⑧ PanelValidationHost — CAD drafting, history page.
-+    ("VisualProof/PanelValidationHost/cad-history.png", [
-+        (1394, 217, 0x4A90E2, 16, "carousel history underline"),
-+        (889, 270, 0x4FD18B, 16, "cylinder revision bubble"),
-+    ]),
-+]
-+
-+
-+def Main():
-+    Failures = 0
-+    Total = 0
-+    for Path, Probes in GATES:
-+        Width, Height, Pixels = Decode(Path)
-+        for Along, Across, Expected, Tolerance, Label in Probes:
-+            Total += 1
-+            Red, Green, Blue, _ = Sample(Pixels, Width, Along, Across)
-+            Passed = (abs(Red - ((Expected >> 16) & 0xFF)) <= Tolerance and
-+                      abs(Green - ((Expected >> 8) & 0xFF)) <= Tolerance and
-+                      abs(Blue - (Expected & 0xFF)) <= Tolerance)
-+            if not Passed:
-+                Failures += 1
-+                Got = (Red << 16) | (Green << 8) | Blue
-+                print(f"  [FAIL] {Path} ({Along},{Across}) {Label}: want #{Expected:06x} got #{Got:06x}")
-+    print(f"AssertProofs: {Total - Failures}/{Total} seated inks stand")
-+    raise SystemExit(1 if Failures else 0)
-+
-+
-+if __name__ == "__main__":
-+    Main()
-diff --git a/Tools/EncodeProof.py b/Tools/EncodeProof.py
-new file mode 100644
-index 0000000..3609d6e
---- /dev/null
-+++ b/Tools/EncodeProof.py
-@@ -0,0 +1,50 @@
-+#!/usr/bin/env python3
-+"""EncodeProof — one marked raw dump to one compressed PNG, stdlib only.
-+
-+Usage: python3 Tools/EncodeProof.py <input.rgba> <output.png>
-+The dump carries the marker RIFTRAW1, the along extent and the across extent
-+before its RGBA ordinates.
-+"""
-+
-+import struct
-+import sys
-+import zlib
-+
-+
-+def Encode(SourcePath, DestinationPath):
-+    with open(SourcePath, "rb") as Stream:
-+        Marker = Stream.read(8)
-+        if Marker != b"RIFTRAW1":
-+            raise SystemExit(f"{SourcePath}: not a marked raw dump")
-+        AlongExtent, AcrossExtent = struct.unpack("<II", Stream.read(8))
-+        Ordinates = Stream.read(AlongExtent * AcrossExtent * 4)
-+        if len(Ordinates) != AlongExtent * AcrossExtent * 4:
-+            raise SystemExit(f"{SourcePath}: ordinates short of the declared extent")
-+
-+    # ① Filter 0 per scanline, zlib-compressed — the smallest honest PNG.
-+    Stride = AlongExtent * 4
-+    Scanlines = bytearray()
-+    for Across in range(AcrossExtent):
-+        Scanlines.append(0)
-+        Scanlines.extend(Ordinates[Across * Stride:(Across + 1) * Stride])
-+    Compressed = zlib.compress(bytes(Scanlines), 9)
-+
-+    def Chunk(Tag, Body):
-+        CRC = zlib.crc32(Tag + Body) & 0xFFFFFFFF
-+        return struct.pack(">I", len(Body)) + Tag + Body + struct.pack(">I", CRC)
-+
-+    Png = bytearray()
-+    Png += b"\x89PNG\r\n\x1a\n"
-+    Png += Chunk(b"IHDR", struct.pack(">IIBBBBB", AlongExtent, AcrossExtent, 8, 6, 0, 0, 0))
-+    Png += Chunk(b"IDAT", Compressed)
-+    Png += Chunk(b"IEND", b"")
-+
-+    with open(DestinationPath, "wb") as Stream:
-+        Stream.write(Png)
-+    print(f"EncodeProof: {DestinationPath} ({AlongExtent}x{AcrossExtent}, {len(Png)} bytes)")
-+
-+
-+if __name__ == "__main__":
-+    if len(sys.argv) != 3:
-+        raise SystemExit(__doc__)
-+    Encode(sys.argv[1], sys.argv[2])
-diff --git a/Tools/ProofProbe.py b/Tools/ProofProbe.py
-new file mode 100644
-index 0000000..b23474d
---- /dev/null
-+++ b/Tools/ProofProbe.py
-@@ -0,0 +1,93 @@
-+#!/usr/bin/env python3
-+"""ProofProbe — reads back a RIFT-encoded PNG and asserts seated inks, plus prints an ASCII reduction.
-+
-+Usage: python3 Tools/ProofProbe.py <proof.png> [--probe along across expectedHex tolerance]...
-+The decoder is the mirror of EncodeProof (filter 0, stdlib only).
-+"""
-+
-+import struct
-+import sys
-+import zlib
-+
-+
-+def Decode(Path):
-+    with open(Path, "rb") as Stream:
-+        Blob = Stream.read()
-+    assert Blob[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
-+    Position = 8
-+    Width = Height = 0
-+    Scanlines = b""
-+    while Position < len(Blob):
-+        Length, = struct.unpack(">I", Blob[Position:Position + 4])
-+        Tag = Blob[Position + 4:Position + 8]
-+        Body = Blob[Position + 8:Position + 8 + Length]
-+        Position += 12 + Length
-+        if Tag == b"IHDR":
-+            Width, Height = struct.unpack(">II", Body[:8])
-+        elif Tag == b"IDAT":
-+            Scanlines += Body
-+    Raw = zlib.decompress(Scanlines)
-+    Stride = Width * 4
-+    Pixels = bytearray(Width * Height * 4)
-+    for Row in range(Height):
-+        Offset = Row * (Stride + 1)
-+        Filter = Raw[Offset]
-+        assert Filter == 0, f"unexpected filter {Filter}"
-+        Pixels[Row * Stride:(Row + 1) * Stride] = Raw[Offset + 1:Offset + 1 + Stride]
-+    return Width, Height, Pixels
-+
-+
-+def Sample(Pixels, Width, Along, Across):
-+    Seat = (Across * Width + Along) * 4
-+    return Pixels[Seat], Pixels[Seat + 1], Pixels[Seat + 2], Pixels[Seat + 3]
-+
-+
-+def Main():
-+    Path = sys.argv[1]
-+    Width, Height, Pixels = Decode(Path)
-+    print(f"ProofProbe: {Path} ({Width}x{Height})")
-+
-+    Failures = 0
-+    Arguments = sys.argv[2:]
-+    Index = 0
-+    while Index + 6 <= len(Arguments):
-+        _, Along, Across, ExpectedHex, Tolerance, Label = Arguments[Index:Index + 6]
-+        Index += 6
-+        Along, Across = int(Along), int(Across)
-+        Expected = int(ExpectedHex, 16)
-+        Delta = int(Tolerance)
-+        Red, Green, Blue, Alpha = Sample(Pixels, Width, Along, Across)
-+        Passed = (abs(Red - ((Expected >> 16) & 0xFF)) <= Delta and
-+                  abs(Green - ((Expected >> 8) & 0xFF)) <= Delta and
-+                  abs(Blue - (Expected & 0xFF)) <= Delta)
-+        Mark = "PASS" if Passed else "FAIL"
-+        if not Passed:
-+            Failures += 1
-+        Got = (Red << 16) | (Green << 8) | Blue
-+        print(f"  [{Mark}] ({Along:4d},{Across:4d}) {Label:<28} want #{ExpectedHex} got #{Got:06x} a={Alpha}")
-+
-+    # ① The ASCII reduction — one character per 15x15 cell, brightness ramp.
-+    Ramp = " .:-=+*#%@"
-+    CellExtent = 15
-+    Columns = Width // CellExtent
-+    RowsOut = Height // CellExtent
-+    print("  ASCII reduction:")
-+    for Row in range(RowsOut):
-+        Line = ""
-+        for Column in range(Columns):
-+            Total = 0
-+            Count = 0
-+            for Across in range(Row * CellExtent, (Row + 1) * CellExtent, 3):
-+                for Along in range(Column * CellExtent, (Column + 1) * CellExtent, 3):
-+                    Red, Green, Blue, _ = Sample(Pixels, Width, Along, Across)
-+                    Total += (Red + Green + Blue) // 3
-+                    Count += 1
-+            Luminance = Total // max(Count, 1)
-+            Line += Ramp[min(Luminance * len(Ramp) // 256, len(Ramp) - 1)]
-+        print("  |" + Line + "|")
-+
-+    raise SystemExit(1 if Failures else 0)
-+
-+
-+if __name__ == "__main__":
-+    Main()
 diff --git a/VisualProof/OutlinerHost/directory.png b/VisualProof/OutlinerHost/directory.png
 new file mode 100644
 index 0000000000000000000000000000000000000000..013a21049ce473c1a5c0d9fdaadd59898d76f47b
