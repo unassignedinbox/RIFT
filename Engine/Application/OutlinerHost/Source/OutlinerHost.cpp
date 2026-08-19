@@ -4,11 +4,10 @@
 // 🧩 The standalone scene directory — the CAD panel's outliner alone on the desk, no editor, no viewport, no lattice.
 
 #include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
 #include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-
-#include "imgui.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -86,45 +85,6 @@ struct HostState
 }   // namespace
 
 //------------------------------------------------------------------------------------------------------------------------
-//                                              THE SHARED CONTEXT CONSTRUCTION
-//------------------------------------------------------------------------------------------------------------------------
-
-namespace Rift
-{
-
-/// 🧩 Constructs the context, the default typeface at three crisp sizes, and the styled window chrome.
-/// tag   internal
-void ConstructInterfaceContext()
-{
-    ImGui::CreateContext();
-    ImGuiIO& VendorIO = ImGui::GetIO();
-
-    ImFontConfig BodyConfig;    BodyConfig.SizePixels    = 13.0f;
-    ImFontConfig SmallConfig;   SmallConfig.SizePixels   = 11.0f;
-    ImFontConfig CaptionConfig; CaptionConfig.SizePixels = 10.0f;
-    VendorIO.Fonts->AddFontDefaultVector(&BodyConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&SmallConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&CaptionConfig);
-    VendorIO.Fonts->Build();
-
-    ImGuiStyle& VendorStyle = ImGui::GetStyle();
-    VendorStyle.WindowRounding    = 0.0f;
-    VendorStyle.WindowPadding     = ImVec2(0.0f, 0.0f);
-    VendorStyle.WindowBorderSize  = 0.0f;
-    VendorStyle.PopupRounding     = 9.0f;
-    VendorStyle.PopupBorderSize   = 1.0f;
-    VendorStyle.ScrollbarSize     = 0.0f;
-    ImVec4* Colours = VendorStyle.Colors;
-    Colours[ImGuiCol_WindowBg]   = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_ChildBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_PopupBg]    = ImVec4(0.063f, 0.063f, 0.071f, 0.98f);
-    Colours[ImGuiCol_Border]     = ImVec4(1.0f, 1.0f, 1.0f, 0.10f);
-    Colours[ImGuiCol_FrameBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-}
-
-}   // namespace Rift
-
-//------------------------------------------------------------------------------------------------------------------------
 //                                                          ENTRY
 //------------------------------------------------------------------------------------------------------------------------
 
@@ -141,11 +101,12 @@ int main(int ArgumentCount, char** Arguments)
     }
 
     using namespace Slate;
-    using namespace Rift;
 
-    ConstructInterfaceContext();
-    ImGuiIO& VendorIO = ImGui::GetIO();
-    VendorIO.DisplaySize = ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));
+    if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
+    {
+        std::fprintf(stderr, "OutlinerHost: the interface context refused to adopt\n");
+        return 1;
+    }
 
     void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
     RasterCodec Codec;
@@ -180,14 +141,9 @@ int main(int ArgumentCount, char** Arguments)
     {
         for (int Warm = 0; Warm < 3; ++Warm)
         {
-            VendorIO.MousePos = ImVec2(-1.0e5f, -1.0e5f);
-            ImGui::NewFrame();
-
-            ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-            ImGui::SetNextWindowSize(ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross)));
-            ImGui::Begin("RIFT \u2014 Directory", nullptr,
-                         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
+            InterfaceSequence::SeatPointer(-1.0e5f, -1.0e5f);
+            if (!InterfaceSequence::OpenTick().ContentPresent())
+                continue;
 
             RecordingSurface Surface;
             if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
@@ -212,13 +168,12 @@ int main(int ArgumentCount, char** Arguments)
                 Surface.Seal();
             }
 
-            ImGui::End();
-            ImGui::Render();
+            void* RecordedDrawData = InterfaceSequence::SealTick();
 
             if (Warm == 2)
             {
                 PixelSpace Extent{ DisplayAlong, DisplayAcross, {} };
-                Codec.Rasterize(ImGui::GetDrawData(), Extent);
+                Codec.Rasterize(RecordedDrawData, Extent);
                 char ProofPath[256];
                 std::snprintf(ProofPath, sizeof ProofPath, "%s/%s.png", ProofPrefix, State.ShotRun);
                 const Deliver<bool> Written = Codec.WritePortableNetworkGraphic(Extent, ProofPath);
@@ -226,14 +181,14 @@ int main(int ArgumentCount, char** Arguments)
                 std::snprintf(RawPath, sizeof RawPath, "Build/Shots/%s.rgba", State.ShotRun);
                 Codec.WriteRawDump(Extent, RawPath);   // 📝 the raw dump feeds the repository's small encoder
                 if (Written.ContentPresent())
-                    std::printf("%s: %s seated\n", "OutlinerHost", ProofPath);
+                    std::printf("OutlinerHost: %s seated\n", ProofPath);
                 else
-                    std::fprintf(stderr, "%s: %s refused — %s\n", "OutlinerHost", ProofPath, Written.Declined().Run);
+                    std::fprintf(stderr, "OutlinerHost: %s refused — %s\n", ProofPath, Written.Declined().Run);
             }
         }
     }
 
-    ImGui::DestroyContext();
+    InterfaceSequence::Dismiss();
 
     std::printf("OutlinerHost: every proof seated under %s\n", ProofPrefix);
     if (PauseAtEnd)

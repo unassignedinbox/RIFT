@@ -1,0 +1,10 @@
+# InterfaceSequence — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "InterfaceSequence"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The headless interface tick — adoption, pointer seating, open, seal. The Api names no vendored
+#    spelling, so hosts stay on the clean side of the partition.

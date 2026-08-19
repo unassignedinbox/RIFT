@@ -5,6 +5,7 @@
 
 #include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 #include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
+#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
 #include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
@@ -12,8 +13,6 @@
 #include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 #include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
 #include "Engine/SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
-
-#include "imgui.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -222,32 +221,12 @@ int main(int ArgumentCount, char** Arguments)
             PauseAtEnd = true;
     }
 
-    // ① Context, default typeface at three crisp sizes, atlas seated against the codec.
-    ImGui::CreateContext();
-    ImGuiIO& VendorIO = ImGui::GetIO();
-    VendorIO.DisplaySize = ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));
-
-    ImFontConfig BodyConfig;    BodyConfig.SizePixels    = 13.0f;
-    ImFontConfig SmallConfig;   SmallConfig.SizePixels   = 11.0f;
-    ImFontConfig CaptionConfig; CaptionConfig.SizePixels = 10.0f;
-    VendorIO.Fonts->AddFontDefaultVector(&BodyConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&SmallConfig);
-    VendorIO.Fonts->AddFontDefaultVector(&CaptionConfig);
-    VendorIO.Fonts->Build();
-
-    ImGuiStyle& VendorStyle = ImGui::GetStyle();
-    VendorStyle.WindowRounding    = 0.0f;
-    VendorStyle.WindowPadding     = ImVec2(0.0f, 0.0f);
-    VendorStyle.WindowBorderSize  = 0.0f;
-    VendorStyle.PopupRounding     = 9.0f;
-    VendorStyle.PopupBorderSize   = 1.0f;
-    VendorStyle.ScrollbarSize     = 0.0f;
-    ImVec4* Colours = VendorStyle.Colors;
-    Colours[ImGuiCol_WindowBg]   = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_ChildBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    Colours[ImGuiCol_PopupBg]    = ImVec4(0.055f, 0.055f, 0.055f, 0.98f);
-    Colours[ImGuiCol_Border]     = ImVec4(1.0f, 1.0f, 1.0f, 0.10f);
-    Colours[ImGuiCol_FrameBg]    = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+    // ① The interface context adopts; the atlas seats against the codec.
+    if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
+    {
+        std::fprintf(stderr, "PanelValidationHost: the interface context refused to adopt\n");
+        return 1;
+    }
 
     void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
     RasterCodec Codec;
@@ -308,32 +287,27 @@ int main(int ArgumentCount, char** Arguments)
             // ①① The scripted pointer: a press on the Dirt Pass zone that travels between cards.
             if (State.DragScripted)
             {
-                const ImVec2 PressSeat(250.0f, 330.0f);
-                const ImVec2 DropSeat(250.0f, 380.0f);
+                constexpr float PressAlong = 250.0f;   // [px] - the Dirt Pass zone
+                constexpr float PressAcross = 330.0f;  // [px]
+                constexpr float DropAlong   = 250.0f;  // [px] - between Scratches and Base Metal
+                constexpr float DropAcross  = 380.0f;  // [px]
                 if (Warm == 0)
                 {
-                    VendorIO.MousePos = PressSeat;
-                    VendorIO.AddMouseButtonEvent(0, true);
+                    InterfaceSequence::SeatPointer(PressAlong, PressAcross);
+                    InterfaceSequence::SeatPrimaryPress();
                 }
                 else
                 {
-                    VendorIO.MousePos = DropSeat;
+                    InterfaceSequence::SeatPointer(DropAlong, DropAcross);
                 }
             }
             else
             {
-                VendorIO.MousePos = ImVec2(-1.0e5f, -1.0e5f);
-                if (Warm == 0)
-                    VendorIO.AddMouseButtonEvent(0, false);
+                InterfaceSequence::SeatPointer(-1.0e5f, -1.0e5f);
             }
 
-            ImGui::NewFrame();
-
-            ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-            ImGui::SetNextWindowSize(ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross)));
-            ImGui::Begin("RIFT \u2014 Panel Validation", nullptr,
-                         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
+            if (!InterfaceSequence::OpenTick().ContentPresent())
+                continue;
 
             RecordingSurface Surface;
             if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
@@ -394,13 +368,12 @@ int main(int ArgumentCount, char** Arguments)
                 Surface.Seal();
             }
 
-            ImGui::End();
-            ImGui::Render();
+            void* RecordedDrawData = InterfaceSequence::SealTick();
 
             if (Warm == 2)
             {
                 PixelSpace Extent{ DisplayAlong, DisplayAcross, {} };
-                Codec.Rasterize(ImGui::GetDrawData(), Extent);
+                Codec.Rasterize(RecordedDrawData, Extent);
                 char ProofPath[256];
                 std::snprintf(ProofPath, sizeof ProofPath, "%s/%s.png", ProofPrefix, State.ShotRun);
                 const Deliver<bool> Written = Codec.WritePortableNetworkGraphic(Extent, ProofPath);
@@ -415,7 +388,7 @@ int main(int ArgumentCount, char** Arguments)
         }
     }
 
-    ImGui::DestroyContext();
+    InterfaceSequence::Dismiss();
 
     std::printf("PanelValidationHost: every proof seated under %s\n", ProofPrefix);
     if (PauseAtEnd)
