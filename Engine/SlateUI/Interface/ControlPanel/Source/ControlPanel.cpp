@@ -11,7 +11,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -534,4 +536,5 @@ void PresentTextRow(PanelExchange& Surface, const PlaneExtent& Row, const Contro
     Surface.TextRun(Surface.CentredAlong(Browse, "...", 16.0f), CentredAcross(Browse, Surface.RunExtent(16.0f)), "...", Sheet.InkPrimary, 16.0f);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

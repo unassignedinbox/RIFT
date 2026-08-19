@@ -13,7 +13,9 @@
 
 #include <cstdio>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 Deliver<bool> InterfaceSequence::Adopt(double DisplayAlong, double DisplayAcross)
@@ -67,7 +69,7 @@ Deliver<bool> InterfaceSequence::OpenTick()
     // ① One borderless window filling the display — the seat every panel records against.
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(VendorIO.DisplaySize);
-    ImGui::Begin("RIFT \u2014 Panel Seat", nullptr,
+    ImGui::Begin("Slate \u2014 Panel Seat", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
     return Deliver<bool>::Delivered(true);
@@ -106,4 +108,5 @@ void InterfaceSequence::Dismiss()
     ImGui::DestroyContext();
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

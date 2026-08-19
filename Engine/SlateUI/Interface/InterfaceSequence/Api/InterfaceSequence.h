@@ -9,7 +9,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -73,4 +75,5 @@ struct InterfaceSequence
 
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

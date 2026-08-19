@@ -8,7 +8,9 @@
 #include <cstdint>
 #include <utility>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -68,4 +70,5 @@ private:
     bool      Standing;   // [-] - whether content stands delivered
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

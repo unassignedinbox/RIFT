@@ -13,7 +13,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -1194,4 +1196,5 @@ void MaskPropertyPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat,
     Surface.TextRun(DeleteSeat.LeastAlong + 26.0f, CentredAcross(DeleteSeat, Surface.RunExtent(10.0f)), "Delete", Sheet.Danger, 10.0f);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

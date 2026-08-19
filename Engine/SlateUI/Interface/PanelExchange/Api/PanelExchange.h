@@ -10,7 +10,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -231,4 +233,5 @@ private:
     bool              Standing    = false;     // [-] - whether a tick stands adopted
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

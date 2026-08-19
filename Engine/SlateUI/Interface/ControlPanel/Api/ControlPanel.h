@@ -11,7 +11,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -135,4 +137,5 @@ void PresentColourRow(PanelExchange& Surface, const PlaneExtent& Row, const Cont
 void PresentTextRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                     char* Run, std::uint32_t RunCapacity, const ControlSheet& Sheet, const char* PushIdentity);
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

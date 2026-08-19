@@ -1,4 +1,4 @@
-# RIFT — reference panels transcribed to C++ (Dear ImGui)
+# Slate — reference panels transcribed to C++ (Dear ImGui)
 
 This repository holds the HTML → C++ transcription of the Slate reference prototypes, built standalone on the
 vendored Dear ImGui (docking) that `Slate` pins — `ocornut/imgui@83f668625d4564de71d385aeb6a5dd04bee02e`,

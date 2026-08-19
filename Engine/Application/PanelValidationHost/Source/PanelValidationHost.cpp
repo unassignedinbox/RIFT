@@ -25,7 +25,7 @@
 namespace
 {
 
-using namespace Rift;
+using namespace Slate::Reference;
 
 constexpr std::uint32_t DisplayAlong  = 1600u;   // [px]
 constexpr std::uint32_t DisplayAcross = 900u;    // [px]
@@ -321,8 +321,8 @@ int main(int ArgumentCount, char** Arguments)
                 Surface.Ground(Desk, Sheet.DeskGround, 0.0f);
 
                 const char* TitleRun = State.Seat >= 3u
-                    ? "RIFT \u2014 Panel Validation \xC2\xB7 CAD drafting panel (remix-remix-global-ui \xC2\xB7 DirectoryPane + Inspector \xC2\xB7 transcribed)"
-                    : "RIFT \u2014 Panel Validation \xC2\xB7 Texture Paint (remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
+                    ? "Slate \u2014 Panel Validation \xC2\xB7 CAD drafting panel (remix-remix-global-ui \xC2\xB7 DirectoryPane + Inspector \xC2\xB7 transcribed)"
+                    : "Slate \u2014 Panel Validation \xC2\xB7 Texture Paint (remix-remix-global-ui/TexturePaint.tsx \xC2\xB7 transcribed)";
                 Surface.TextRun(SheetMargin, 8.0f, TitleRun, Sheet.InkMuted, 12.5f);
 
                 if (State.Seat <= 2u)

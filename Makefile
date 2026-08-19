@@ -1,4 +1,4 @@
-# RIFT — standalone transcribed panels. Sandbox build; Module.toml carries the declarative unit map.
+# Slate — standalone transcribed panels. Sandbox build; Module.toml carries the declarative unit map.
 #
 #   make            build both hosts
 #   make proof      run the hosts headlessly and encode VisualProof PNGs

@@ -1,7 +1,7 @@
 //============================================================================================================================================
 //                                                      OUTLINERWINDOWHOST.CPP
 //============================================================================================================================================
-// 🧩 The interactive scene directory — HostLifecycle's own window and Vulkan seat, the InterfaceValidationHost pattern, Rift panels inside.
+// 🧩 The interactive scene directory — HostLifecycle's own window and Vulkan seat, the InterfaceValidationHost pattern, Slate::Reference panels inside.
 
 #include "Contract/DeliveryContract.h"
 #include "SlateUI/Interface/InterfaceExchange/Api/InterfaceExchange.h"
@@ -27,7 +27,7 @@ using namespace Slate;
 constexpr std::uint32_t InitialWidth  = 420u;    // [px] - the directory column with its desk margin
 constexpr std::uint32_t InitialHeight = 780u;    // [px]
 
-constexpr const char* WindowTitle = "RIFT \u2014 Directory (scene outliner)";
+constexpr const char* WindowTitle = "Slate \u2014 Directory (scene outliner)";
 constexpr const char* HostName    = "OutlinerWindowHost";
 
 constexpr float DirectoryAlong = 350.0f;   // [px] - the reference's directory column
@@ -51,16 +51,16 @@ struct SeedStand
 
 struct ForestStand
 {
-    Rift::OutlinerRowDeclaration Root[1];          // [-] - r001 Part
-    Rift::OutlinerRowDeclaration Sketches[2];      // [-] - r003, r004
-    Rift::OutlinerRowDeclaration Bracket[3];       // [-] - r007..r009
-    Rift::OutlinerRowDeclaration Bodies[3];        // [-] - r006, r010, r011
-    Rift::OutlinerRowDeclaration Enclosed[2];      // [-] - r002 Sketches, r005 Bodies
+    Slate::Reference::OutlinerRowDeclaration Root[1];          // [-] - r001 Part
+    Slate::Reference::OutlinerRowDeclaration Sketches[2];      // [-] - r003, r004
+    Slate::Reference::OutlinerRowDeclaration Bracket[3];       // [-] - r007..r009
+    Slate::Reference::OutlinerRowDeclaration Bodies[3];        // [-] - r006, r010, r011
+    Slate::Reference::OutlinerRowDeclaration Enclosed[2];      // [-] - r002 Sketches, r005 Bodies
 };
 
 void AssembleForest(SeedStand& Stand, ForestStand& Forest)
 {
-    using namespace Rift;
+    using namespace Slate::Reference;
 
     Forest.Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &Stand.HiddenBasePlate, nullptr, 0u };
     Forest.Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
@@ -132,8 +132,8 @@ int main()
 
     RecordingSurface Surface;
 
-    // ③ The Rift seat — the glyph drawn as primitives, the directory as the reference seats it.
-    Rift::IconDepot Depot;
+    // ③ The Slate::Reference seat — the glyph drawn as primitives, the directory as the reference seats it.
+    Slate::Reference::IconDepot Depot;
 
     if (!Depot.Construct().ContentPresent())
     {
@@ -142,7 +142,7 @@ int main()
     }
     Depot.SeatVectorGlyph();
 
-    Rift::OutlinerPanel Directory;
+    Slate::Reference::OutlinerPanel Directory;
     SeedStand Stand;
     ForestStand Forest;
     AssembleForest(Stand, Forest);
@@ -191,19 +191,19 @@ int main()
         {
             const DisplayCondition& Display = Surface.Display();
 
-            Rift::PanelExchange RiftSurface;
-            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath).ContentPresent())
+            Slate::Reference::PanelExchange PanelRecordSurface;
+            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent())
             {
-                Rift::WorkspaceInk Sheet;
-                RiftSurface.Ground(Rift::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
+                Slate::Reference::WorkspaceInk Sheet;
+                PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
                                    Sheet.DeskGround, 0.0f);
                 const float Margin = (Display.ExtentAlong - DirectoryAlong) * 0.5f;
-                Directory.Advance(RiftSurface,
-                                  Rift::PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, Display.ExtentAcross - 40.0f },
-                                  Forest.Root, 1u, Rift::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
+                Directory.Advance(PanelRecordSurface,
+                                  Slate::Reference::PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, Display.ExtentAcross - 40.0f },
+                                  Forest.Root, 1u, Slate::Reference::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
                 if (Directory.InspectRaised)
                     Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
-                RiftSurface.Seal();
+                PanelRecordSurface.Seal();
             }
 
             Surface.Retire();

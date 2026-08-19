@@ -11,7 +11,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 namespace
@@ -227,4 +229,5 @@ void DraftingPanel::PresentMetadata(PanelExchange& Surface, const PlaneExtent& S
                     CentredAcross(Foot, Surface.RunExtent(10.0f)), Declared->Identity, Sheet.InkMuted, 10.0f);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

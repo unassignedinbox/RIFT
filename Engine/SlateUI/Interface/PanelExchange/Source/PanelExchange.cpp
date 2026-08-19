@@ -12,7 +12,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {  
 namespace
 {
@@ -464,4 +466,5 @@ void PanelExchange::TrashGlyph(float CentreAlong, float CentreAcross, float Radi
     Stroke(CentreAlong + Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong + Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

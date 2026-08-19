@@ -12,7 +12,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -145,4 +147,5 @@ private:
     std::uint32_t    PresentedCount = 0u;        // [-]  - rows presented this tick
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

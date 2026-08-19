@@ -20,7 +20,7 @@
 namespace
 {
 
-using namespace Rift;
+using namespace Slate::Reference;
 
 constexpr std::uint32_t DisplayAlong  = 400u;    // [px]
 constexpr std::uint32_t DisplayAcross = 760u;    // [px]
@@ -100,7 +100,7 @@ int main(int ArgumentCount, char** Arguments)
             PauseAtEnd = true;
     }
 
-    using namespace Rift;
+    using namespace Slate::Reference;
 
     void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
     RasterCodec Codec;

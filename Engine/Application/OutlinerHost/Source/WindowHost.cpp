@@ -19,14 +19,17 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 /// 🧩 Constructs the context, the default typeface at three crisp sizes, and the styled window chrome.
 /// tag   internal
 void ConstructInterfaceContext();
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate
 
 //------------------------------------------------------------------------------------------------------------------------
 //                                                    THE SEED FOREST
@@ -35,7 +38,7 @@ void ConstructInterfaceContext();
 namespace
 {
 
-using namespace Rift;
+using namespace Slate::Reference;
 
 constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
 
@@ -91,8 +94,8 @@ void AssembleForest(SeedStand& Stand, ForestStand& Forest)
 
 int main()
 {
-    using namespace Rift;
-    using namespace Rift;
+    using namespace Slate::Reference;
+    using namespace Slate::Reference;
 
     if (glfwInit() != GLFW_TRUE)
     {
@@ -102,7 +105,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* Window = glfwCreateWindow(400, 760, "RIFT \u2014 Directory (standalone outliner)", nullptr, nullptr);
+    GLFWwindow* Window = glfwCreateWindow(400, 760, "Slate \u2014 Directory (standalone outliner)", nullptr, nullptr);
     if (Window == nullptr)
     {
         std::fprintf(stderr, "WindowHost: the window refused to open\n");
@@ -151,7 +154,7 @@ int main()
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(FramebufferAlong), static_cast<float>(FramebufferAcross)));
-        ImGui::Begin("RIFT \u2014 Directory", nullptr,
+        ImGui::Begin("Slate \u2014 Directory", nullptr,
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
 

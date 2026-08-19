@@ -12,7 +12,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -82,4 +84,5 @@ private:
     void*                      GlyphSeat = nullptr;   // [-] - the vendor picture identity
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

@@ -10,7 +10,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -87,4 +89,5 @@ private:
     std::uint32_t                    AtlasAcrossExtent = 0u;   // [px]
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

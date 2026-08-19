@@ -15,7 +15,9 @@
 #include <filesystem>
 #include <system_error>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 Deliver<bool> RasterCodec::SeatAtlas(void* Identity)
@@ -370,4 +372,5 @@ Deliver<bool> RasterCodec::WritePortableNetworkGraphic(const PixelSpace& Extent,
     return Deliver<bool>::Delivered(true);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

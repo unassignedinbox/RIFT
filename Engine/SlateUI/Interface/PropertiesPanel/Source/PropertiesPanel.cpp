@@ -12,7 +12,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -680,4 +682,5 @@ void PropertiesPanel::PresentHistory(PanelExchange& Surface, const PlaneExtent& 
     }
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

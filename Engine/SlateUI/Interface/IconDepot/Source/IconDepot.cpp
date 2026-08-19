@@ -9,7 +9,9 @@
 
 #include <cmath>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 namespace
@@ -150,4 +152,5 @@ void IconDepot::PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, f
                         GlyphSeat, Tint, EdgeExtent * 0.18f);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

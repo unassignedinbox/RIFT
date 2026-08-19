@@ -13,7 +13,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -154,4 +156,5 @@ private:
     float ScrollAcross = 0.0f;   // [px] - body scroll ordinate
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

@@ -12,7 +12,9 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -353,4 +355,5 @@ void OutlinerPanel::PresentRow(PanelExchange& Surface, const PlaneExtent& Body, 
             PresentRow(Surface, Body, Row.Enclosed[Inner], Depth + 1u, RetentionStanding, RowDepot);
 }
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

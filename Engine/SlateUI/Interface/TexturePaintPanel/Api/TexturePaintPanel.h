@@ -12,7 +12,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -212,4 +214,5 @@ public:
     void Advance(PanelExchange& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot);
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate

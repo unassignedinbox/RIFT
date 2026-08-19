@@ -13,7 +13,9 @@
 
 #include <cstdint>
 
-namespace Rift
+namespace Slate
+{
+namespace Reference
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -47,4 +49,5 @@ private:
                          const ProfileOrdinates& Profile, const IconDepot& Depot);
 };
 
-}   // namespace Rift
+}   // namespace Reference
+}   // namespace Slate
