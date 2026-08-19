@@ -80,10 +80,6 @@ void* InterfaceSequence::SealTick()
     return ImGui::GetDrawData();
 }
 
-void* InterfaceSequence::SealTickDrawData()
-{
-    return ImGui::GetDrawData();
-}
 
 void InterfaceSequence::SeatFaultReporter()
 {

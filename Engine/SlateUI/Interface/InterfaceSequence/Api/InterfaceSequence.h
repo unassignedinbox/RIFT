@@ -6,7 +6,6 @@
 #pragma once
 
 #include "Contract/Api/PanelContract.h"
-#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 
 #include <cstdint>
 
@@ -53,10 +52,7 @@ struct InterfaceSequence
     /// tag   api, nonallocating, nonthrowing
     static void* SealTick();
 
-    /// 🧩 The recorded draw data of the last sealed tick — the backends' present input.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    static void* SealTickDrawData();
+
 
     /// 🧩 Dismisses the adopted context.
     /// cost  ✔️
@@ -74,39 +70,7 @@ struct InterfaceSequence
     /// tag   api, nonallocating, nonthrowing
     static void NameStage(const char* StageRun);
 
-    /// 🧩 Adopts the vendored context behind a real platform window — the interactive seat.
-    /// note  🔴 The window translation units live inside SlateUI, the one unit permitted the vendored
-    ///       window and interface backends; the host drives only these calls.
-    /// out   Deliver  [-]  refuses with CapabilityAbsent when the window refuses to open
-    /// cost  🚩
-    /// tag   api, nonthrowing
-    static Deliver<bool> AdoptWindowed(double DisplayAlong, double DisplayAcross, const char* TitleRun);
 
-    /// 🧩 Whether the window still stands open.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    static bool WindowStanding();
-
-    /// 🧩 Begins one windowed tick — events polled, the frame opens, the host window stands.
-    /// out   Deliver  [-]  refuses when no window stands
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    static Deliver<bool> BeginWindowTick();
-
-    /// 🧩 Ends the windowed tick — the frame seals, the backends present, the buffer swaps.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    static void EndWindowTick();
-
-    /// 🧩 Uploads the glyph depot's raster once and adopts the platform picture identity.
-    /// cost  🚩
-    /// tag   api, nonthrowing
-    static void SeatGlyphPicture(const IconDepot& Depot);
-
-    /// 🧩 Dismisses the windowed seat.
-    /// cost  ✔️
-    /// tag   api, nonallocating, nonthrowing
-    static void DismissWindowed();
 };
 
 }   // namespace Rift

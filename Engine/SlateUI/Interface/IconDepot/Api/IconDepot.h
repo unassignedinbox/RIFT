@@ -50,6 +50,14 @@ public:
     /// tag   api, nonallocating, nonthrowing
     void AdoptIdentity(void* ArrivingIdentity)   { GlyphSeat = ArrivingIdentity; }
 
+    /// 🧩 Seats the vector presentation — the glyph is drawn as primitives, no picture seat at all.
+    /// note  The engine's own icons are vector-drawn; the windowed seat rides that same grain.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    void SeatVectorGlyph()   { GlyphSeat = nullptr; }
+
+
+
     /// 🧩 The vendor picture identity of the rasterised dummy glyph, for Picture recordings.
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing

@@ -112,6 +112,22 @@ Deliver<bool> IconDepot::Construct()
     return Deliver<bool>::Delivered(true);
 }
 
+namespace
+{
+
+/// 🧩 The dummy glyph as primitives — rounded square outline and centre dot — when no picture stands.
+/// tag   internal, nonallocating, nonthrowing
+void PresentVectorGlyph(PanelExchange& Surface, const PlaneExtent& Square, const InkOrdinate& Tint)
+{
+    const float Stroke = Square.SpanAlong() * 0.09f < 1.0f ? 1.0f : Square.SpanAlong() * 0.09f;
+    Surface.Edge(Square, Tint, Stroke, Square.SpanAlong() * 0.28f);
+    Surface.Medallion(Square.LeastAlong + Square.SpanAlong() * 0.5f,
+                      Square.LeastAcross + Square.SpanAcross() * 0.5f,
+                      Square.SpanAlong() * 0.14f, Tint);
+}
+
+}   // namespace
+
 void IconDepot::PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const
 {
     const float Edge = Seat.SpanAlong() < Seat.SpanAcross() ? Seat.SpanAlong() : Seat.SpanAcross();
@@ -119,13 +135,19 @@ void IconDepot::PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, co
         return;
     const float Along  = Seat.LeastAlong + (Seat.SpanAlong() - Edge) * 0.5f;
     const float Across = Seat.LeastAcross + (Seat.SpanAcross() - Edge) * 0.5f;
-    Surface.Picture(Spanning(Along, Across, Edge, Edge), GlyphSeat, Tint, Edge * 0.18f);
+    if (GlyphSeat == nullptr)
+        PresentVectorGlyph(Surface, Spanning(Along, Across, Edge, Edge), Tint);
+    else
+        Surface.Picture(Spanning(Along, Across, Edge, Edge), GlyphSeat, Tint, Edge * 0.18f);
 }
 
 void IconDepot::PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const
 {
-    Surface.Picture(Spanning(CentreAlong - EdgeExtent * 0.5f, CentreAcross - EdgeExtent * 0.5f, EdgeExtent, EdgeExtent),
-                    GlyphSeat, Tint, EdgeExtent * 0.18f);
+    if (GlyphSeat == nullptr)
+        PresentVectorGlyph(Surface, Spanning(CentreAlong - EdgeExtent * 0.5f, CentreAcross - EdgeExtent * 0.5f, EdgeExtent, EdgeExtent), Tint);
+    else
+        Surface.Picture(Spanning(CentreAlong - EdgeExtent * 0.5f, CentreAcross - EdgeExtent * 0.5f, EdgeExtent, EdgeExtent),
+                        GlyphSeat, Tint, EdgeExtent * 0.18f);
 }
 
 }   // namespace Rift

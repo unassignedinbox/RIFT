@@ -1,50 +1,67 @@
 //============================================================================================================================================
 //                                                      OUTLINERWINDOWHOST.CPP
 //============================================================================================================================================
-// 🧩 The interactive standalone directory — a real platform window; click rows, filter, ctrl-select, inspect.
+// 🧩 The interactive scene directory — HostLifecycle's own window and Vulkan seat, the InterfaceValidationHost pattern, Rift panels inside.
+
+#include "Contract/DeliveryContract.h"
+#include "SlateUI/Interface/InterfaceExchange/Api/InterfaceExchange.h"
+#include "SlateUI/Interface/InterfaceExchange/Api/RecordingSurface.h"
+#include "SlateVulkan/Device/HostLifecycle/Api/HostLifecycle.h"
 
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
+#include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
-#include <cstdint>
 #include <cstdio>
 
 //------------------------------------------------------------------------------------------------------------------------
-//                                                    THE SEED FOREST
+//                                                          FIGURES
 //------------------------------------------------------------------------------------------------------------------------
 
 namespace
 {
 
-using namespace Rift;
+using namespace Slate;
 
-constexpr float WindowAlong     = 400.0f;   // [px]
-constexpr float WindowAcross    = 760.0f;   // [px]
-constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
+constexpr std::uint32_t InitialWidth  = 420u;    // [px] - the directory column with its desk margin
+constexpr std::uint32_t InitialHeight = 780u;    // [px]
+
+constexpr const char* WindowTitle = "RIFT \u2014 Directory (scene outliner)";
+constexpr const char* HostName    = "OutlinerWindowHost";
+
+constexpr float DirectoryAlong = 350.0f;   // [px] - the reference's directory column
+
+// 📝 The desk ground, #0a0a0b, as the clear ink Await paces every frame with.
+constexpr float DeskClearInk[4] = { 0.039f, 0.039f, 0.043f, 1.0f };   // [-]
+
+//------------------------------------------------------------------------------------------------------------------------
+//                                                    THE SEED FOREST
+//------------------------------------------------------------------------------------------------------------------------
 
 struct SeedStand
 {
-    bool ExpandedRoot     = true;
-    bool ExpandedSketches = true;
-    bool ExpandedBodies   = true;
-    bool ExpandedBracket  = true;
-    bool HiddenSketches   = false;
-    bool HiddenBasePlate  = false;
+    bool ExpandedRoot     = true;    // [-] - r001
+    bool ExpandedSketches = true;    // [-] - r002
+    bool ExpandedBodies   = true;    // [-] - r005
+    bool ExpandedBracket  = true;    // [-] - r006
+    bool HiddenSketches   = false;   // [-] - r002
+    bool HiddenBasePlate  = false;   // [-] - r003
 };
 
 struct ForestStand
 {
-    OutlinerRowDeclaration Root[1];
-    OutlinerRowDeclaration Sketches[2];
-    OutlinerRowDeclaration Bracket[3];
-    OutlinerRowDeclaration Bodies[3];
-    OutlinerRowDeclaration Enclosed[2];
+    Rift::OutlinerRowDeclaration Root[1];          // [-] - r001 Part
+    Rift::OutlinerRowDeclaration Sketches[2];      // [-] - r003, r004
+    Rift::OutlinerRowDeclaration Bracket[3];       // [-] - r007..r009
+    Rift::OutlinerRowDeclaration Bodies[3];        // [-] - r006, r010, r011
+    Rift::OutlinerRowDeclaration Enclosed[2];      // [-] - r002 Sketches, r005 Bodies
 };
 
 void AssembleForest(SeedStand& Stand, ForestStand& Forest)
 {
+    using namespace Rift;
+
     Forest.Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &Stand.HiddenBasePlate, nullptr, 0u };
     Forest.Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
 
@@ -62,6 +79,24 @@ void AssembleForest(SeedStand& Stand, ForestStand& Forest)
     Forest.Root[0] = { "Part", "r001", DirectoryClassification::Scene, &Stand.ExpandedRoot, nullptr, Forest.Enclosed, 2u };
 }
 
+/// 🧩 Copies the device handles across the layer seam into the attachment the interface declares.
+InterfaceAttachment Attach(const DeviceOffering& Offered)
+{
+    InterfaceAttachment Arriving = {};
+
+    Arriving.Instance                 = Offered.Instance;
+    Arriving.ScoredDevice             = Offered.ScoredDevice;
+    Arriving.ActiveDevice             = Offered.ActiveDevice;
+    Arriving.GraphicsQueue            = Offered.GraphicsQueue;
+    Arriving.GraphicsFamilyOrdinal    = Offered.GraphicsFamilyOrdinal;
+    Arriving.ColourTargetFormat       = Offered.ColourTargetFormat;
+    Arriving.MinimumDisplayImageCount = Offered.MinimumDisplayImageCount;
+    Arriving.DisplayImageCount        = Offered.DisplayImageCount;
+    Arriving.NativeWindowSlot         = Offered.NativeWindowSlot;
+
+    return Arriving;
+}
+
 }   // namespace
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -70,48 +105,133 @@ void AssembleForest(SeedStand& Stand, ForestStand& Forest)
 
 int main()
 {
-    InterfaceSequence::SeatFaultReporter();
+    using namespace Slate;
 
-    if (!InterfaceSequence::AdoptWindowed(WindowAlong, WindowAcross, "RIFT \u2014 Directory (scene outliner)").ContentPresent())
+    // ① The lifetimes — window, instance, surface, device, chain, slots, recordings — HostLifecycle's own.
+    HostDeclaration Declared;
+    Declared.Naming              = HostName;
+    Declared.WindowCaption       = WindowTitle;
+    Declared.InitialWidth        = InitialWidth;
+    Declared.InitialHeight       = InitialHeight;
+    Declared.Pacing              = LatencyIntent::SteadyPacing;
+    Declared.DiagnosticRequested = true;
+
+    HostLifecycle Lifetime;
+
+    if (!Lifetime.Construct(Declared).ContentPresent)
+        return 1;
+
+    // ② The interface seam over the same Vulkan lifetimes.
+    InterfaceExchange Interface;
+
+    if (!Interface.Construct(Attach(Lifetime.Offering())).ContentPresent)
     {
-        std::fprintf(stderr, "OutlinerWindowHost: the window refused to adopt\n");
+        std::printf("%s \u2014 the interface context was refused\n", HostName);
         return 1;
     }
 
-    IconDepot Depot;
-    if (!Depot.Construct().ContentPresent())
+    RecordingSurface Surface;
+
+    // ③ The Rift seat — the glyph drawn as primitives, the directory as the reference seats it.
+    Rift::IconDepot Depot;
+
+    if (!Depot.Construct().ContentPresent)
     {
-        std::fprintf(stderr, "OutlinerWindowHost: the glyph depot refused to construct\n");
+        std::printf("%s \u2014 the glyph depot was refused\n", HostName);
         return 1;
     }
-    InterfaceSequence::SeatGlyphPicture(Depot);
+    Depot.SeatVectorGlyph();
 
-    OutlinerPanel Directory;
+    Rift::OutlinerPanel Directory;
     SeedStand Stand;
     ForestStand Forest;
     AssembleForest(Stand, Forest);
     Directory.SeatTaken("r007");
 
-    while (InterfaceSequence::WindowStanding())
+    // ④ The paced loop — Await acquires and opens, Surrender submits and presents.
+    while (Lifetime.Standing())
     {
-        if (!InterfaceSequence::BeginWindowTick().ContentPresent())
+        const TickPass Pass = Lifetime.Await(DeskClearInk);
+
+        if (Pass.Standing == TickStanding::Closed)
             break;
 
-        PanelExchange Surface;
-        if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
+        if (Lifetime.DeviceRecovered())
         {
-            WorkspaceInk Sheet;
-            Surface.Ground(PlaneExtent{ 0.0f, 0.0f, WindowAlong, WindowAcross }, Sheet.DeskGround, 0.0f);
-            const float Margin = (WindowAlong - DirectoryAlong) * 0.5f;
-            Directory.Advance(Surface, PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, WindowAcross - 40.0f },
-                              Forest.Root, 1u, OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
-            if (Directory.InspectRaised)
-                Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
-            Surface.Seal();
+            Interface.Reclaim();
+
+            if (!Interface.Construct(Attach(Lifetime.Offering())).ContentPresent)
+            {
+                std::printf("%s \u2014 the interface could not be rebuilt on the recovered device\n", HostName);
+                break;
+            }
+            static_cast<void>(Lifetime.DisplayRecovered());
         }
-        InterfaceSequence::EndWindowTick();
+        else if (Lifetime.DisplayRecovered())
+        {
+            const DeviceOffering Offered = Lifetime.Offering();
+            if (!Interface.Renegotiate(Offered.MinimumDisplayImageCount, Offered.DisplayImageCount))
+            {
+                std::printf("%s \u2014 the interface declined the restated image counts\n", HostName);
+            }
+        }
+
+        if (Pass.Standing != TickStanding::Recording)
+            continue;
+
+        bool ContentBuilt = Interface.Advance().ContentPresent;
+
+        if (ContentBuilt && !Surface.Adopt().ContentPresent)
+        {
+            Disregard(Interface.Abandon());
+            ContentBuilt = false;
+        }
+
+        if (ContentBuilt)
+        {
+            const DisplayCondition& Display = Surface.Display();
+
+            Rift::PanelExchange RiftSurface;
+            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath).ContentPresent)
+            {
+                Rift::WorkspaceInk Sheet;
+                RiftSurface.Ground(Rift::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
+                                   Sheet.DeskGround, 0.0f);
+                const float Margin = (Display.ExtentAlong - DirectoryAlong) * 0.5f;
+                Directory.Advance(RiftSurface,
+                                  Rift::PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, Display.ExtentAcross - 40.0f },
+                                  Forest.Root, 1u, Rift::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
+                if (Directory.InspectRaised)
+                    Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
+                RiftSurface.Seal();
+            }
+
+            Surface.Retire();
+
+            if (Interface.Seal().ContentPresent)
+            {
+                if (!Interface.Record(Pass.Recording))
+                {
+                    std::printf("%s \u2014 the interface content was not recorded\n", HostName);
+                }
+            }
+            else
+            {
+                Disregard(Interface.Abandon());
+            }
+        }
+
+        if (!Lifetime.Surrender().ContentPresent)
+            break;
     }
 
-    InterfaceSequence::DismissWindowed();
-    return 0;
+    // ⑤ Reclamation — the interface retires before the lifetimes it was constructed over.
+    const std::uint32_t Serious = Lifetime.StateDiagnostics();
+
+    Surface.Reset();
+    Interface.Reclaim();
+    Lifetime.Reclaim();
+
+    std::printf("%s \u2014 exited cleanly\n", HostName);
+    return (Serious == 0u) ? 0 : 1;
 }

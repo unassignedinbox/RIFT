@@ -63,15 +63,10 @@ check: proof
 clean:
 	rm -rf $(BUILD)
 
-# ① The interactive window host — requires local GLFW and OpenGL development packages
-#    (`pkg-config glfw3 gl`). Not built by default; the sandbox has neither.
-# ① The interactive window host — the platform-window TU needs local GLFW headers/libs
-#    (`pkg-config glfw3 gl`). On Slate the same host builds through Construct.ps1, where
-#    InterfaceSequence/Source/InterfaceSequenceWindow.cpp supplies the windowed seam.
-outliner-window: $(IMGUI_SOURCES) $(filter-out $(BUILD)/OutlinerHost,$(ENGINE_SOURCES)) \
-                 Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequenceWindow.cpp \
-                 Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp | $(BUILD)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -I Engine $^ $(shell pkg-config --cflags --libs glfw3 gl) -o $(BUILD)/OutlinerWindowHost
+# ① OutlinerWindowHost rides Slate's own HostLifecycle (Vulkan + window); it builds through
+#    Slate's Construct.ps1, which has the Vulkan SDK and the engine units this host requires.
+window-note:
+	@echo OutlinerWindowHost builds through Slate Construct.ps1
 
 check: proof
 	python3 Tools/AssertProofs.py
