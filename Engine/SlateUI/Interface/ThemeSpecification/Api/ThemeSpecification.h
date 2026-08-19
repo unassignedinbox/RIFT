@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -200,4 +200,4 @@ struct CadInk
     static constexpr std::uint32_t RightSwatch  = 0x3B82F6u;   // [-] - Right Plane
 };
 
-}   // namespace Slate
+}   // namespace Rift

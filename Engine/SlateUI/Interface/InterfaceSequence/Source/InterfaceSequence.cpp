@@ -7,7 +7,7 @@
 
 #include "imgui.h"
 
-namespace Slate
+namespace Rift
 {
 
 Deliver<bool> InterfaceSequence::Adopt(double DisplayAlong, double DisplayAcross)
@@ -79,4 +79,4 @@ void InterfaceSequence::Dismiss()
     ImGui::DestroyContext();
 }
 
-}   // namespace Slate
+}   // namespace Rift

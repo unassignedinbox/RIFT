@@ -9,7 +9,7 @@
 
 #include <cmath>
 
-namespace Slate
+namespace Rift
 {
 
 namespace
@@ -112,7 +112,7 @@ Deliver<bool> IconDepot::Construct()
     return Deliver<bool>::Delivered(true);
 }
 
-void IconDepot::PresentGlyph(RecordingSurface& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const
+void IconDepot::PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const
 {
     const float Edge = Seat.SpanAlong() < Seat.SpanAcross() ? Seat.SpanAlong() : Seat.SpanAcross();
     if (Edge <= 1.0f)
@@ -122,10 +122,10 @@ void IconDepot::PresentGlyph(RecordingSurface& Surface, const PlaneExtent& Seat,
     Surface.Picture(Spanning(Along, Across, Edge, Edge), GlyphSeat, Tint, Edge * 0.18f);
 }
 
-void IconDepot::PresentGlyphCentred(RecordingSurface& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const
+void IconDepot::PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const
 {
     Surface.Picture(Spanning(CentreAlong - EdgeExtent * 0.5f, CentreAcross - EdgeExtent * 0.5f, EdgeExtent, EdgeExtent),
                     GlyphSeat, Tint, EdgeExtent * 0.18f);
 }
 
-}   // namespace Slate
+}   // namespace Rift

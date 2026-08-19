@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "Contract/Api/DeliveryContract.h"
+#include "Contract/Api/PanelContract.h"
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ public:
 
     /// 🧩 Presents the stack inside the seat extent, one tick.
     /// tag   api, nonallocating, nonthrowing
-    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
+    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
                  const IconDepot& Depot);
 
     char           RetentionRun[48] = "";   // [-] - the live filter run
@@ -173,7 +173,7 @@ public:
 
     /// 🧩 Presents the seat inside the extent, one tick.
     /// tag   api, nonallocating, nonthrowing
-    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot);
+    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot);
 
 private:
 
@@ -209,7 +209,7 @@ public:
 
     /// 🧩 Presents the seat inside the extent, one tick.
     /// tag   api, nonallocating, nonthrowing
-    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot);
+    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot);
 };
 
-}   // namespace Slate
+}   // namespace Rift

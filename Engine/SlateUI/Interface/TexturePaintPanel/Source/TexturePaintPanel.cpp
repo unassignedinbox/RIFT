@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ bool PresentSeat(const PlaneExtent& Seat, const char* PushIdentity, bool& Roused
 
 /// 🧩 The channel sheet's slider — capsule of 92 px, centred numeral, 30 px unit segment, 19 px track.
 /// tag   internal
-void PresentChannelSlider(RecordingSurface& Surface, const PlaneExtent& Row, double& Amount, double Minimum, double Maximum,
+void PresentChannelSlider(PanelExchange& Surface, const PlaneExtent& Row, double& Amount, double Minimum, double Maximum,
                           std::uint32_t Figures, const char* Unit, const char* PushIdentity)
 {
     ChannelInk Sheet;
@@ -156,7 +156,7 @@ void PresentChannelSlider(RecordingSurface& Surface, const PlaneExtent& Row, dou
 
 /// 🧩 The channel sheet's segment row — a 999-radius pill, the taken segment inverted.
 /// tag   internal
-void PresentChannelSegments(RecordingSurface& Surface, const PlaneExtent& Seat, const char* const* Captions, std::uint32_t Count,
+void PresentChannelSegments(PanelExchange& Surface, const PlaneExtent& Seat, const char* const* Captions, std::uint32_t Count,
                             std::uint32_t& Taken, const char* PushIdentity)
 {
     ChannelInk Sheet;
@@ -203,7 +203,7 @@ void PresentChannelSegments(RecordingSurface& Surface, const PlaneExtent& Seat, 
 
 /// 🧩 The pickbar — a pill head opening a styled option list, for generators and transfer captions.
 /// tag   internal
-void PresentPickbar(RecordingSurface& Surface, const PlaneExtent& Seat, const char* CurrentRun, const char* PushIdentity)
+void PresentPickbar(PanelExchange& Surface, const PlaneExtent& Seat, const char* CurrentRun, const char* PushIdentity)
 {
     ChannelInk Sheet;
     bool Roused = false;
@@ -223,7 +223,7 @@ void PresentPickbar(RecordingSurface& Surface, const PlaneExtent& Seat, const ch
 
 /// 🧩 The 8 px checkerboard a texture thumb seats.
 /// tag   internal
-void PresentCheckerTile(RecordingSurface& Surface, const PlaneExtent& Seat)
+void PresentCheckerTile(PanelExchange& Surface, const PlaneExtent& Seat)
 {
     ChannelInk Sheet;
     const InkOrdinate Dark = Covering(0x0A0A0Au);
@@ -310,7 +310,7 @@ void SeatChannelOrdinates(ChannelOrdinates& Ordinates)
 //                                                      THE LAYER STACK
 //------------------------------------------------------------------------------------------------------------------------
 
-void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
+void LayerStackPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
                               const IconDepot& Depot)
 {
     ChannelInk Sheet;
@@ -772,7 +772,7 @@ void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
 //                                                  THE CHANNEL PROPERTY SEAT
 //------------------------------------------------------------------------------------------------------------------------
 
-void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot)
+void ChannelPropertyPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot)
 {
     ChannelInk Sheet;
     Surface.Ground(Seat, Sheet.DeskGround, 0.0f);
@@ -1071,7 +1071,7 @@ void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent&
 //                                                   THE MASK PROPERTY SEAT
 //------------------------------------------------------------------------------------------------------------------------
 
-void MaskPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot)
+void MaskPropertyPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot)
 {
     ChannelInk Sheet;
     Surface.Ground(Seat, Sheet.StandingGround, 0.0f);
@@ -1194,4 +1194,4 @@ void MaskPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Se
     Surface.TextRun(DeleteSeat.LeastAlong + 26.0f, CentredAcross(DeleteSeat, Surface.RunExtent(10.0f)), "Delete", Sheet.Danger, 10.0f);
 }
 
-}   // namespace Slate
+}   // namespace Rift

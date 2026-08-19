@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include "Contract/Api/DeliveryContract.h"
+#include "Contract/Api/PanelContract.h"
 
 #include <cstdint>
 #include <vector>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -87,4 +87,4 @@ private:
     std::uint32_t                    AtlasAcrossExtent = 0u;   // [px]
 };
 
-}   // namespace Slate
+}   // namespace Rift

@@ -10,7 +10,7 @@
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 #include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
@@ -25,7 +25,7 @@
 namespace
 {
 
-using namespace Slate;
+using namespace Rift;
 
 constexpr std::uint32_t DisplayAlong  = 1600u;   // [px]
 constexpr std::uint32_t DisplayAcross = 900u;    // [px]
@@ -191,7 +191,7 @@ struct RevisionStand
 
 /// 🧩 One framed card seat on the validation sheet.
 /// tag   internal
-PlaneExtent PresentCard(RecordingSurface& Surface, float LeadingAlong, float TrailingExtent, const WorkspaceInk& Sheet,
+PlaneExtent PresentCard(PanelExchange& Surface, float LeadingAlong, float TrailingExtent, const WorkspaceInk& Sheet,
                         const char* CaptionRun)
 {
     const float CardAcross = static_cast<float>(DisplayAcross) - SheetMargin - SheetTitle - 20.0f;
@@ -309,8 +309,8 @@ int main(int ArgumentCount, char** Arguments)
             if (!InterfaceSequence::OpenTick().ContentPresent())
                 continue;
 
-            RecordingSurface Surface;
-            if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
+            PanelExchange Surface;
+            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
             {
                 WorkspaceInk Sheet;
                 const PlaneExtent Desk = Spanning(0.0f, 0.0f, static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));

@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "Contract/Api/DeliveryContract.h"
+#include "Contract/Api/PanelContract.h"
 
 #include <cstdint>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -58,4 +58,4 @@ struct InterfaceSequence
     static void Dismiss();
 };
 
-}   // namespace Slate
+}   // namespace Rift

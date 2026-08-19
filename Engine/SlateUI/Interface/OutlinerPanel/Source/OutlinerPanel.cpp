@@ -12,7 +12,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ bool OutlinerPanel::Retained(const OutlinerRowDeclaration& Row) const
     return false;
 }
 
-void OutlinerPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
+void OutlinerPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat,
                             const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
                             const OutlinerComposition& Composition, const IconDepot& ArrivingDepot)
 {
@@ -218,7 +218,7 @@ void OutlinerPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
     }
 }
 
-void OutlinerPanel::PresentRow(RecordingSurface& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
+void OutlinerPanel::PresentRow(PanelExchange& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
                                std::uint32_t Depth, bool RetentionStanding, const IconDepot& RowDepot)
 {
     if (RetentionStanding && !Retained(Row))
@@ -353,4 +353,4 @@ void OutlinerPanel::PresentRow(RecordingSurface& Surface, const PlaneExtent& Bod
             PresentRow(Surface, Body, Row.Enclosed[Inner], Depth + 1u, RetentionStanding, RowDepot);
 }
 
-}   // namespace Slate
+}   // namespace Rift

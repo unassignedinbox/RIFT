@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 The one translation unit that addresses the vendored interface library — every recorded primitive lands in its draw list.
 
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 
 #include "imgui.h"
 
@@ -12,9 +12,8 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
-{
-
+namespace Rift
+{  
 namespace
 {
 
@@ -94,7 +93,7 @@ bool DrawnStandIn(std::uint32_t Codepoint, float& Advance)
 //                                                       ADOPTION
 //------------------------------------------------------------------------------------------------------------------------
 
-Deliver<bool> RecordingSurface::Adopt(ShellLayer Layer)
+Deliver<bool> PanelExchange::Adopt(ShellLayer Layer)
 {
     ImGuiIO& VendorIO = ImGui::GetIO();
     if (VendorIO.Fonts == nullptr)
@@ -113,7 +112,7 @@ Deliver<bool> RecordingSurface::Adopt(ShellLayer Layer)
     return Deliver<bool>::Delivered(true);
 }
 
-void RecordingSurface::Seal()
+void PanelExchange::Seal()
 {
     Standing  = false;
     Recording = nullptr;
@@ -123,7 +122,7 @@ void RecordingSurface::Seal()
 //                                                    GROUNDS AND EDGES
 //------------------------------------------------------------------------------------------------------------------------
 
-void RecordingSurface::Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners)
+void PanelExchange::Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners)
 {
     if (!Standing)
         return;
@@ -133,7 +132,7 @@ void RecordingSurface::Ground(const PlaneExtent& Extent, const InkOrdinate& Ink,
                         ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners));
 }
 
-void RecordingSurface::Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners)
+void PanelExchange::Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners)
 {
     if (!Standing)
         return;
@@ -143,7 +142,7 @@ void RecordingSurface::Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, f
                   ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners), Thickness);
 }
 
-void RecordingSurface::Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower)
+void PanelExchange::Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower)
 {
     if (!Standing)
         return;
@@ -154,7 +153,7 @@ void RecordingSurface::Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper
                                   ImGui::GetColorU32(InkToVec4(Lower)), ImGui::GetColorU32(InkToVec4(Lower)));
 }
 
-void RecordingSurface::ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing)
+void PanelExchange::ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing)
 {
     if (!Standing)
         return;
@@ -165,7 +164,7 @@ void RecordingSurface::ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& 
                                   ImGui::GetColorU32(InkToVec4(Trailing)), ImGui::GetColorU32(InkToVec4(Leading)));
 }
 
-void RecordingSurface::Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     if (!Standing)
         return;
@@ -173,7 +172,7 @@ void RecordingSurface::Medallion(float CentreAlong, float CentreAcross, float Ra
                                                           ImGui::GetColorU32(InkToVec4(Ink)), 24);
 }
 
-void RecordingSurface::Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners)
+void PanelExchange::Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners)
 {
     if (!Standing || VendorIdentity == nullptr)
         return;
@@ -185,7 +184,7 @@ void RecordingSurface::Picture(const PlaneExtent& Extent, void* VendorIdentity, 
                                                          ImGui::GetColorU32(InkToVec4(Tint)), Radius, CornerFlags(Corners));
 }
 
-void RecordingSurface::Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink)
+void PanelExchange::Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink)
 {
     if (!Standing)
         return;
@@ -193,7 +192,7 @@ void RecordingSurface::Ring(float CentreAlong, float CentreAcross, float Radius,
                                                     ImGui::GetColorU32(InkToVec4(Ink)), 24, Thickness);
 }
 
-void RecordingSurface::Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink)
+void PanelExchange::Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink)
 {
     if (!Standing)
         return;
@@ -201,7 +200,7 @@ void RecordingSurface::Stroke(float AlongA, float AcrossA, float AlongB, float A
                                                   ImGui::GetColorU32(InkToVec4(Ink)), Thickness);
 }
 
-void RecordingSurface::Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink)
+void PanelExchange::Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink)
 {
     Stroke(Along, Across, Along + ExtentAlong, Across, Thickness, Ink);
 }
@@ -234,7 +233,7 @@ ImFont* TypefaceFor(float Size)
 
 }   // namespace
 
-void RecordingSurface::TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size)
+void PanelExchange::TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size)
 {
     if (!Standing || Run == nullptr || Run[0] == '\0')
         return;
@@ -284,7 +283,7 @@ void RecordingSurface::TextRun(float Along, float Across, const char* Run, const
     }
 }
 
-void RecordingSurface::TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong)
+void PanelExchange::TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong)
 {
     if (!Standing || Run == nullptr)
         return;
@@ -322,7 +321,7 @@ void RecordingSurface::TextRunClipped(float Along, float Across, const char* Run
     TextRun(Along + MeasureRun(Trimmed, Size), Across, "...", Ink, Size);
 }
 
-float RecordingSurface::MeasureRun(const char* Run, float Size) const
+float PanelExchange::MeasureRun(const char* Run, float Size) const
 {
     if (Run == nullptr)
         return 0.0f;
@@ -357,12 +356,12 @@ float RecordingSurface::MeasureRun(const char* Run, float Size) const
     return Extent;
 }
 
-float RecordingSurface::RunExtent(float Size) const
+float PanelExchange::RunExtent(float Size) const
 {
     return TypefaceFor(Size)->LegacySize;
 }
 
-float RecordingSurface::CentredAlong(const PlaneExtent& Extent, const char* Run, float Size) const
+float PanelExchange::CentredAlong(const PlaneExtent& Extent, const char* Run, float Size) const
 {
     return Extent.LeastAlong + (Extent.SpanAlong() - MeasureRun(Run, Size)) * 0.5f;
 }
@@ -371,7 +370,7 @@ float RecordingSurface::CentredAlong(const PlaneExtent& Extent, const char* Run,
 //                                                    AFFORDANCE GLYPHS
 //------------------------------------------------------------------------------------------------------------------------
 
-void RecordingSurface::Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down)
+void PanelExchange::Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down)
 {
     // ① Down — the two strokes meet at the lower ordinate; right — they meet at the trailing ordinate.
     if (Down)
@@ -386,7 +385,7 @@ void RecordingSurface::Chevron(float CentreAlong, float CentreAcross, float Radi
     }
 }
 
-void RecordingSurface::EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent)
+void PanelExchange::EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent)
 {
     if (!Standing)
         return;
@@ -431,32 +430,32 @@ void RecordingSurface::EyeGlyph(float CentreAlong, float CentreAcross, float Rad
     Medallion(CentreAlong, CentreAcross + Radius * 0.04f, Radius * 0.26f, Ink);
 }
 
-void RecordingSurface::SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     Ring(CentreAlong - Radius * 0.18f, CentreAcross - Radius * 0.18f, Radius * 0.62f, 1.5f, Ink);
     Stroke(CentreAlong + Radius * 0.34f, CentreAcross + Radius * 0.34f,
            CentreAlong + Radius * 0.78f, CentreAcross + Radius * 0.78f, 1.5f, Ink);
 }
 
-void RecordingSurface::PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     Stroke(CentreAlong - Radius, CentreAcross, CentreAlong + Radius, CentreAcross, 1.5f, Ink);
     Stroke(CentreAlong, CentreAcross - Radius, CentreAlong, CentreAcross + Radius, 1.5f, Ink);
 }
 
-void RecordingSurface::CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     Stroke(CentreAlong - Radius, CentreAcross - Radius, CentreAlong + Radius, CentreAcross + Radius, 1.5f, Ink);
     Stroke(CentreAlong + Radius, CentreAcross - Radius, CentreAlong - Radius, CentreAcross + Radius, 1.5f, Ink);
 }
 
-void RecordingSurface::CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     Stroke(CentreAlong - Radius, CentreAcross, CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.6f, Ink);
     Stroke(CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, CentreAlong + Radius, CentreAcross - Radius * 0.6f, 1.6f, Ink);
 }
 
-void RecordingSurface::TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
+void PanelExchange::TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
 {
     const PlaneExtent Bin = Spanning(CentreAlong - Radius * 0.75f, CentreAcross - Radius * 0.45f, Radius * 1.5f, Radius * 1.35f);
     Edge(Bin, Ink, 1.3f, 1.5f, CornerSelection::Lower);
@@ -465,4 +464,4 @@ void RecordingSurface::TrashGlyph(float CentreAlong, float CentreAcross, float R
     Stroke(CentreAlong + Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong + Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
 }
 
-}   // namespace Slate
+}   // namespace Rift

@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ namespace
 
 /// 🧩 Presents one numeral capsule — black ground, right-aligned numeral, unit segment.
 /// tag   internal
-void PresentCapsule(RecordingSurface& Surface, const PlaneExtent& Seat, const char* NumeralRun, const char* UnitRun,
+void PresentCapsule(PanelExchange& Surface, const PlaneExtent& Seat, const char* NumeralRun, const char* UnitRun,
                     const ControlSheet& Sheet, bool Focused)
 {
     Surface.Ground(Seat, Sheet.FieldSunken, 12.0f);
@@ -119,7 +119,7 @@ void PresentCapsule(RecordingSurface& Surface, const PlaneExtent& Seat, const ch
 
 /// 🧩 Presents one track with fill and knob at the declared fraction.
 /// tag   internal
-void PresentTrack(RecordingSurface& Surface, const PlaneExtent& Track, double Fraction, const ControlSheet& Sheet, bool Roused)
+void PresentTrack(PanelExchange& Surface, const PlaneExtent& Track, double Fraction, const ControlSheet& Sheet, bool Roused)
 {
     Surface.Ground(Track, Sheet.TrackGround, Track.SpanAcross() * 0.5f);
     Surface.Ground(Spanning(Track.LeastAlong, Track.LeastAcross, Track.SpanAlong() * static_cast<float>(Fraction), Track.SpanAcross()),
@@ -165,7 +165,7 @@ void FormatNumeral(char (&Seat)[32], double Amount, std::uint32_t Figures)
 //                                                   THE RETENTION FIELD
 //------------------------------------------------------------------------------------------------------------------------
 
-bool PresentRetentionField(RecordingSurface& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
+bool PresentRetentionField(PanelExchange& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
                            const char* Placeholder, const InkOrdinate& FieldGround, const InkOrdinate& FieldEdge,
                            const InkOrdinate& RunInk, const InkOrdinate& VacantInk)
 {
@@ -203,7 +203,7 @@ bool PresentRetentionField(RecordingSurface& Surface, const PlaneExtent& Seat, c
 //                                                    THE SWITCH ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentSwitchRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentSwitchRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       bool& Taken, const ControlSheet& Sheet, const char* PushIdentity)
 {
     Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -225,7 +225,7 @@ void PresentSwitchRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 //                                                   THE SEGMENT ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentSegmentRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentSegmentRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                        const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
                        const ControlSheet& Sheet, const char* PushIdentity)
 {
@@ -256,7 +256,7 @@ void PresentSegmentRow(RecordingSurface& Surface, const PlaneExtent& Row, const 
 //                                                  THE DROPDOWN ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentDropdownRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentDropdownRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                         const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
                         const ControlSheet& Sheet, const char* PushIdentity)
 {
@@ -311,7 +311,7 @@ void PresentDropdownRow(RecordingSurface& Surface, const PlaneExtent& Row, const
 //                                                   THE VALUE SLIDER ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentSliderRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       const SliderDeclaration& Range, double& Amount, const ControlSheet& Sheet, const char* PushIdentity)
 {
     Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -361,7 +361,7 @@ void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 //                                                    THE SCALAR ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentScalarRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       const SliderDeclaration& Range, double Step, double& Amount, const ControlSheet& Sheet,
                       const char* PushIdentity)
 {
@@ -397,7 +397,7 @@ void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 //                                                    THE VECTOR ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentVectorRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentVectorRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       double Ordinates[3], double Step, const ControlSheet& Sheet, const char* PushIdentity)
 {
     Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -439,7 +439,7 @@ void PresentVectorRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 //                                                    THE COLOUR ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentColourRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentColourRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                       std::uint8_t Ordinates[4], bool& SeatedOpen, const ControlSheet& Sheet, const char* PushIdentity)
 {
     Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -505,7 +505,7 @@ void PresentColourRow(RecordingSurface& Surface, const PlaneExtent& Row, const C
 //                                                     THE TEXT ROW
 //------------------------------------------------------------------------------------------------------------------------
 
-void PresentTextRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
+void PresentTextRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
                     char* Run, std::uint32_t RunCapacity, const ControlSheet& Sheet, const char* PushIdentity)
 {
     Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -534,4 +534,4 @@ void PresentTextRow(RecordingSurface& Surface, const PlaneExtent& Row, const Con
     Surface.TextRun(Surface.CentredAlong(Browse, "...", 16.0f), CentredAcross(Browse, Surface.RunExtent(16.0f)), "...", Sheet.InkPrimary, 16.0f);
 }
 
-}   // namespace Slate
+}   // namespace Rift

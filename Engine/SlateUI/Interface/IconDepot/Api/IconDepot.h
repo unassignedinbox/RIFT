@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "Contract/Api/DeliveryContract.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "Contract/Api/PanelContract.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 #include <vector>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ namespace Slate
 ///       slot, rasterised once from `Api/DummyGlyph.svg` and tinted at presentation time.
 /// note  🔴 No icon artwork is authored, generated or imported — the dummy glyph is the single placeholder,
 ///       and classification is carried by the tint, exactly as the seats below it carry no identity either.
-///       Affordance glyphs (chevrons, eyes, plus, search) are drawn strokes on the RecordingSurface, not
+///       Affordance glyphs (chevrons, eyes, plus, search) are drawn strokes on the PanelExchange, not
 ///       depot pictures.
 /// tag   contract, nonallocating, nonthrowing
 class IconDepot
@@ -62,11 +62,11 @@ public:
 
     /// 🧩 Presents the dummy glyph, tinted, fitted and centred inside the seat extent.
     /// tag   api, nonallocating, nonthrowing
-    void PresentGlyph(RecordingSurface& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const;
+    void PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const;
 
     /// 🧩 Presents the dummy glyph, tinted, centred on a point at the given edge extent.
     /// tag   api, nonallocating, nonthrowing
-    void PresentGlyphCentred(RecordingSurface& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const;
+    void PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const;
 
 private:
 
@@ -74,4 +74,4 @@ private:
     void*                      GlyphSeat = nullptr;   // [-] - the vendor picture identity
 };
 
-}   // namespace Slate
+}   // namespace Rift

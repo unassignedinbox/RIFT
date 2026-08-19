@@ -7,7 +7,7 @@
 #include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -20,7 +20,7 @@
 namespace
 {
 
-using namespace Slate;
+using namespace Rift;
 
 constexpr std::uint32_t DisplayAlong  = 400u;    // [px]
 constexpr std::uint32_t DisplayAcross = 760u;    // [px]
@@ -100,7 +100,7 @@ int main(int ArgumentCount, char** Arguments)
             PauseAtEnd = true;
     }
 
-    using namespace Slate;
+    using namespace Rift;
 
     if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
     {
@@ -145,8 +145,8 @@ int main(int ArgumentCount, char** Arguments)
             if (!InterfaceSequence::OpenTick().ContentPresent())
                 continue;
 
-            RecordingSurface Surface;
-            if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
+            PanelExchange Surface;
+            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
             {
                 // ① The desk ground, then the directory alone.
                 WorkspaceInk Sheet;

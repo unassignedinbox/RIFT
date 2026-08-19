@@ -12,7 +12,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ std::uint32_t CountFields(DirectoryClassification Classification)
 
 }   // namespace
 
-void PropertiesPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
+void PropertiesPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
                               ProfileOrdinates& Profile, const IconDepot& Depot,
                               const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
                               const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount)
@@ -495,7 +495,7 @@ void PropertiesPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat
 //                                                       THE HISTORY
 //------------------------------------------------------------------------------------------------------------------------
 
-void PropertiesPanel::PresentHistory(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
+void PropertiesPanel::PresentHistory(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
                                      const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
                                      const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount, const IconDepot& Depot)
 {
@@ -680,4 +680,4 @@ void PropertiesPanel::PresentHistory(RecordingSurface& Surface, const PlaneExten
     }
 }
 
-}   // namespace Slate
+}   // namespace Rift

@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace Slate
+namespace Rift
 {
 
 namespace
@@ -32,7 +32,7 @@ bool PresentSeat(const PlaneExtent& Seat, const char* PushIdentity, bool& Roused
 
 }   // namespace
 
-void DraftingPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
+void DraftingPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
                             const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
                             const OutlinerRowDeclaration* Inspected, ProfileOrdinates& Profile, const IconDepot& Depot)
 {
@@ -64,7 +64,7 @@ void DraftingPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, 
                                       RightColumn.MostAcross - Bar.MostAcross), Inspected, Profile, Depot);
 }
 
-void DraftingPanel::PresentMetadata(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
+void DraftingPanel::PresentMetadata(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
                                     const ProfileOrdinates& Profile, const IconDepot& Depot)
 {
     WorkspaceInk Sheet;
@@ -227,4 +227,4 @@ void DraftingPanel::PresentMetadata(RecordingSurface& Surface, const PlaneExtent
                     CentredAcross(Foot, Surface.RunExtent(10.0f)), Declared->Identity, Sheet.InkMuted, 10.0f);
 }
 
-}   // namespace Slate
+}   // namespace Rift

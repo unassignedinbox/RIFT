@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 //============================================================================================================================================
 //                                                            RASTERCODEC.CPP
 //============================================================================================================================================
@@ -14,7 +15,7 @@
 #include <filesystem>
 #include <system_error>
 
-namespace Slate
+namespace Rift
 {
 
 Deliver<bool> RasterCodec::SeatAtlas(void* Identity)
@@ -368,4 +369,4 @@ Deliver<bool> RasterCodec::WritePortableNetworkGraphic(const PixelSpace& Extent,
     return Deliver<bool>::Delivered(true);
 }
 
-}   // namespace Slate
+}   // namespace Rift

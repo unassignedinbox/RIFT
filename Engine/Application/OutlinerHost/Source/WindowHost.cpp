@@ -7,7 +7,7 @@
 
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -35,7 +35,7 @@ void ConstructInterfaceContext();
 namespace
 {
 
-using namespace Slate;
+using namespace Rift;
 
 constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
 
@@ -91,7 +91,7 @@ void AssembleForest(SeedStand& Stand, ForestStand& Forest)
 
 int main()
 {
-    using namespace Slate;
+    using namespace Rift;
     using namespace Rift;
 
     if (glfwInit() != GLFW_TRUE)
@@ -155,8 +155,8 @@ int main()
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
 
-        RecordingSurface Surface;
-        if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
+        PanelExchange Surface;
+        if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
         {
             WorkspaceInk Sheet;
             const float DeskAlong = static_cast<float>(FramebufferAlong);

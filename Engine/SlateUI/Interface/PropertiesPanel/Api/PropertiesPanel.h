@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include "Contract/Api/DeliveryContract.h"
+#include "Contract/Api/PanelContract.h"
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 
-namespace Slate
+namespace Rift
 {
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ public:
     /// in    Declared   [-]  the inspected row; nullptr presents the vacated seat
     /// in    Revisions  [-]  borrowed; the whole revision record, filtered to the declared walk
     /// tag   api, nonallocating, nonthrowing
-    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
+    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
                  ProfileOrdinates& Profile, const IconDepot& Depot,
                  const RevisionDeclaration* Revisions = nullptr, std::uint32_t RevisionCount = 0u,
                  const OutlinerRowDeclaration* Forest = nullptr, std::uint32_t ForestCount = 0u);
@@ -147,11 +147,11 @@ private:
 
     /// 🧩 Presents the history page — the revision stack for the declared row and everything it encloses.
     /// tag   internal, nonallocating, nonthrowing
-    void PresentHistory(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
+    void PresentHistory(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
                         const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
                         const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount, const IconDepot& Depot);
 
     float ScrollAcross = 0.0f;   // [px] - body scroll ordinate
 };
 
-}   // namespace Slate
+}   // namespace Rift

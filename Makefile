@@ -15,7 +15,7 @@ IMGUI_SOURCES := \
     ExternalPackages/imgui/imgui_widgets.cpp
 
 ENGINE_SOURCES := \
-    Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp \
+    Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp \
     Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp \
     Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp \
     Engine/SlateUI/Interface/ControlPanel/Source/ControlPanel.cpp \
