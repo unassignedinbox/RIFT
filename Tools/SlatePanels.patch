@@ -40,7 +40,7 @@ index 971a260..44a5ba6 100644
  #    order below is the reverse of the dependency order, which is what the linker resolves against.
 diff --git a/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
 new file mode 100644
-index 0000000..3c77b84
+index 0000000..9030dbb
 --- /dev/null
 +++ b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
 @@ -0,0 +1,200 @@
@@ -53,7 +53,7 @@ index 0000000..3c77b84
 +#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 +#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +
 +#include <cstdint>
 +#include <cstdio>
@@ -66,7 +66,7 @@ index 0000000..3c77b84
 +namespace
 +{
 +
-+using namespace Slate;
++using namespace Rift;
 +
 +constexpr std::uint32_t DisplayAlong  = 400u;    // [px]
 +constexpr std::uint32_t DisplayAcross = 760u;    // [px]
@@ -146,7 +146,7 @@ index 0000000..3c77b84
 +            PauseAtEnd = true;
 +    }
 +
-+    using namespace Slate;
++    using namespace Rift;
 +
 +    if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
 +    {
@@ -191,8 +191,8 @@ index 0000000..3c77b84
 +            if (!InterfaceSequence::OpenTick().ContentPresent())
 +                continue;
 +
-+            RecordingSurface Surface;
-+            if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
++            PanelExchange Surface;
++            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
 +            {
 +                // ① The desk ground, then the directory alone.
 +                WorkspaceInk Sheet;
@@ -246,7 +246,7 @@ index 0000000..3c77b84
 +}
 diff --git a/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
 new file mode 100644
-index 0000000..4401fe2
+index 0000000..1d54297
 --- /dev/null
 +++ b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
 @@ -0,0 +1,400 @@
@@ -262,7 +262,7 @@ index 0000000..4401fe2
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 +#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 +#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
@@ -277,7 +277,7 @@ index 0000000..4401fe2
 +namespace
 +{
 +
-+using namespace Slate;
++using namespace Rift;
 +
 +constexpr std::uint32_t DisplayAlong  = 1600u;   // [px]
 +constexpr std::uint32_t DisplayAcross = 900u;    // [px]
@@ -443,7 +443,7 @@ index 0000000..4401fe2
 +
 +/// 🧩 One framed card seat on the validation sheet.
 +/// tag   internal
-+PlaneExtent PresentCard(RecordingSurface& Surface, float LeadingAlong, float TrailingExtent, const WorkspaceInk& Sheet,
++PlaneExtent PresentCard(PanelExchange& Surface, float LeadingAlong, float TrailingExtent, const WorkspaceInk& Sheet,
 +                        const char* CaptionRun)
 +{
 +    const float CardAcross = static_cast<float>(DisplayAcross) - SheetMargin - SheetTitle - 20.0f;
@@ -561,8 +561,8 @@ index 0000000..4401fe2
 +            if (!InterfaceSequence::OpenTick().ContentPresent())
 +                continue;
 +
-+            RecordingSurface Surface;
-+            if (Surface.Adopt(RecordingSurface::ShellLayer::Beneath).ContentPresent())
++            PanelExchange Surface;
++            if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
 +            {
 +                WorkspaceInk Sheet;
 +                const PlaneExtent Desk = Spanning(0.0f, 0.0f, static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross));
@@ -650,11 +650,11 @@ index 0000000..4401fe2
 +    }
 +    return 0;
 +}
-diff --git a/Engine/Contract/Api/DeliveryContract.h b/Engine/Contract/Api/DeliveryContract.h
+diff --git a/Engine/Contract/Api/PanelContract.h b/Engine/Contract/Api/PanelContract.h
 new file mode 100644
-index 0000000..0f6ee43
+index 0000000..04473d1
 --- /dev/null
-+++ b/Engine/Contract/Api/DeliveryContract.h
++++ b/Engine/Contract/Api/PanelContract.h
 @@ -0,0 +1,71 @@
 +//============================================================================================================================================
 +//                                                        DELIVERYCONTRACT.H
@@ -666,7 +666,7 @@ index 0000000..0f6ee43
 +#include <cstdint>
 +#include <utility>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -726,10 +726,10 @@ index 0000000..0f6ee43
 +    bool      Standing;   // [-] - whether content stands delivered
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h b/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h
 new file mode 100644
-index 0000000..b48f416
+index 0000000..d2d0fb6
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h
 @@ -0,0 +1,50 @@
@@ -740,15 +740,15 @@ index 0000000..b48f416
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 +#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -765,7 +765,7 @@ index 0000000..b48f416
 +
 +    /// 🧩 Presents the drafting composition inside the seat extent, one tick.
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
 +                 const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
 +                 const OutlinerRowDeclaration* Inspected, ProfileOrdinates& Profile, const IconDepot& Depot);
 +
@@ -778,14 +778,14 @@ index 0000000..b48f416
 +
 +    /// 🧩 Presents the metadata pane — hero, stats, albedo, the advance action, the action list, the foot.
 +    /// tag   internal, nonallocating, nonthrowing
-+    void PresentMetadata(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++    void PresentMetadata(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                         const ProfileOrdinates& Profile, const IconDepot& Depot);
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 new file mode 100644
-index 0000000..febfd83
+index 0000000..1adff67
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 @@ -0,0 +1,230 @@
@@ -802,7 +802,7 @@ index 0000000..febfd83
 +#include <cstdio>
 +#include <cstring>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +namespace
@@ -823,7 +823,7 @@ index 0000000..febfd83
 +
 +}   // namespace
 +
-+void DraftingPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
++void DraftingPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, OutlinerPanel& Directory,
 +                            const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
 +                            const OutlinerRowDeclaration* Inspected, ProfileOrdinates& Profile, const IconDepot& Depot)
 +{
@@ -855,7 +855,7 @@ index 0000000..febfd83
 +                                      RightColumn.MostAcross - Bar.MostAcross), Inspected, Profile, Depot);
 +}
 +
-+void DraftingPanel::PresentMetadata(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++void DraftingPanel::PresentMetadata(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                                    const ProfileOrdinates& Profile, const IconDepot& Depot)
 +{
 +    WorkspaceInk Sheet;
@@ -1018,10 +1018,10 @@ index 0000000..febfd83
 +                    CentredAcross(Foot, Surface.RunExtent(10.0f)), Declared->Identity, Sheet.InkMuted, 10.0f);
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h b/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h
 new file mode 100644
-index 0000000..4851548
+index 0000000..c82e315
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h
 @@ -0,0 +1,138 @@
@@ -1033,12 +1033,12 @@ index 0000000..4851548
 +#pragma once
 +
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -1114,58 +1114,58 @@ index 0000000..4851548
 +/// in    ExtentAlong  [px]  the field's along span
 +/// out   true while the entry stands focused
 +/// tag   api, nonallocating, nonthrowing
-+bool PresentRetentionField(RecordingSurface& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
++bool PresentRetentionField(PanelExchange& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
 +                           const char* Placeholder, const InkOrdinate& FieldGround, const InkOrdinate& FieldEdge,
 +                           const InkOrdinate& RunInk, const InkOrdinate& VacantInk);
 +
 +/// 🧩 One labelled switch row — track and nub reproduce `.switch` and `.nub` from the reference.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentSwitchRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSwitchRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      bool& Taken, const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled segment row — mutually exclusive caption pills, the taken one inverted.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentSegmentRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSegmentRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                       const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
 +                       const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled dropdown row — pill head with caret, opening a styled option list.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentDropdownRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentDropdownRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                        const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
 +                        const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled value slider row — numeral capsule, unit segment, track, fill, knob.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSliderRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      const SliderDeclaration& Range, double& Amount, const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled scalar row — the reference's ScalarEntry: numeral capsule beside a centred-knob track,
 +///       the capsule drag stepping the amount.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentScalarRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      const SliderDeclaration& Range, double Step, double& Amount, const ControlSheet& Sheet,
 +                      const char* PushIdentity);
 +
 +/// 🧩 One labelled vector row — three axis capsules, each numeral editable.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentVectorRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentVectorRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      double Ordinates[3], double Step, const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled colour row — the reference's colour pill with circle swatch and run of ordinates.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentColourRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentColourRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      std::uint8_t Ordinates[4], bool& SeatedOpen, const ControlSheet& Sheet, const char* PushIdentity);
 +
 +/// 🧩 One labelled text row — the reference's pathfield pill with the round browse action.
 +/// tag   api, nonallocating, nonthrowing
-+void PresentTextRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentTextRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                    char* Run, std::uint32_t RunCapacity, const ControlSheet& Sheet, const char* PushIdentity);
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp b/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp
 new file mode 100644
-index 0000000..f12edc6
+index 0000000..9a7a26d
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp
 @@ -0,0 +1,537 @@
@@ -1182,7 +1182,7 @@ index 0000000..f12edc6
 +#include <cstdio>
 +#include <cstring>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -1266,7 +1266,7 @@ index 0000000..f12edc6
 +
 +/// 🧩 Presents one numeral capsule — black ground, right-aligned numeral, unit segment.
 +/// tag   internal
-+void PresentCapsule(RecordingSurface& Surface, const PlaneExtent& Seat, const char* NumeralRun, const char* UnitRun,
++void PresentCapsule(PanelExchange& Surface, const PlaneExtent& Seat, const char* NumeralRun, const char* UnitRun,
 +                    const ControlSheet& Sheet, bool Focused)
 +{
 +    Surface.Ground(Seat, Sheet.FieldSunken, 12.0f);
@@ -1290,7 +1290,7 @@ index 0000000..f12edc6
 +
 +/// 🧩 Presents one track with fill and knob at the declared fraction.
 +/// tag   internal
-+void PresentTrack(RecordingSurface& Surface, const PlaneExtent& Track, double Fraction, const ControlSheet& Sheet, bool Roused)
++void PresentTrack(PanelExchange& Surface, const PlaneExtent& Track, double Fraction, const ControlSheet& Sheet, bool Roused)
 +{
 +    Surface.Ground(Track, Sheet.TrackGround, Track.SpanAcross() * 0.5f);
 +    Surface.Ground(Spanning(Track.LeastAlong, Track.LeastAcross, Track.SpanAlong() * static_cast<float>(Fraction), Track.SpanAcross()),
@@ -1336,7 +1336,7 @@ index 0000000..f12edc6
 +//                                                   THE RETENTION FIELD
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+bool PresentRetentionField(RecordingSurface& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
++bool PresentRetentionField(PanelExchange& Surface, const PlaneExtent& Seat, char* Run, std::uint32_t RunCapacity,
 +                           const char* Placeholder, const InkOrdinate& FieldGround, const InkOrdinate& FieldEdge,
 +                           const InkOrdinate& RunInk, const InkOrdinate& VacantInk)
 +{
@@ -1374,7 +1374,7 @@ index 0000000..f12edc6
 +//                                                    THE SWITCH ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentSwitchRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSwitchRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      bool& Taken, const ControlSheet& Sheet, const char* PushIdentity)
 +{
 +    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -1396,7 +1396,7 @@ index 0000000..f12edc6
 +//                                                   THE SEGMENT ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentSegmentRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSegmentRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                       const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
 +                       const ControlSheet& Sheet, const char* PushIdentity)
 +{
@@ -1427,7 +1427,7 @@ index 0000000..f12edc6
 +//                                                  THE DROPDOWN ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentDropdownRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentDropdownRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                        const char* const* Captions, std::uint32_t CaptionCount, std::uint32_t& Taken,
 +                        const ControlSheet& Sheet, const char* PushIdentity)
 +{
@@ -1482,7 +1482,7 @@ index 0000000..f12edc6
 +//                                                   THE VALUE SLIDER ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentSliderRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentSliderRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      const SliderDeclaration& Range, double& Amount, const ControlSheet& Sheet, const char* PushIdentity)
 +{
 +    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -1532,7 +1532,7 @@ index 0000000..f12edc6
 +//                                                    THE SCALAR ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentScalarRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentScalarRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      const SliderDeclaration& Range, double Step, double& Amount, const ControlSheet& Sheet,
 +                      const char* PushIdentity)
 +{
@@ -1568,7 +1568,7 @@ index 0000000..f12edc6
 +//                                                    THE VECTOR ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentVectorRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentVectorRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      double Ordinates[3], double Step, const ControlSheet& Sheet, const char* PushIdentity)
 +{
 +    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -1610,7 +1610,7 @@ index 0000000..f12edc6
 +//                                                    THE COLOUR ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentColourRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentColourRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                      std::uint8_t Ordinates[4], bool& SeatedOpen, const ControlSheet& Sheet, const char* PushIdentity)
 +{
 +    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -1676,7 +1676,7 @@ index 0000000..f12edc6
 +//                                                     THE TEXT ROW
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PresentTextRow(RecordingSurface& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
++void PresentTextRow(PanelExchange& Surface, const PlaneExtent& Row, const ControlRowDeclaration& Declared,
 +                    char* Run, std::uint32_t RunCapacity, const ControlSheet& Sheet, const char* PushIdentity)
 +{
 +    Surface.TextRun(Row.LeastAlong, CentredAcross(Row, Surface.RunExtent(Declared.CaptionSize)),
@@ -1705,7 +1705,7 @@ index 0000000..f12edc6
 +    Surface.TextRun(Surface.CentredAlong(Browse, "...", 16.0f), CentredAcross(Browse, Surface.RunExtent(16.0f)), "...", Sheet.InkPrimary, 16.0f);
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/IconDepot/Api/DummyGlyph.svg b/Engine/SlateUI/Interface/IconDepot/Api/DummyGlyph.svg
 new file mode 100644
 index 0000000..822a515
@@ -1720,7 +1720,7 @@ index 0000000..822a515
 +</svg>
 diff --git a/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h b/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h
 new file mode 100644
-index 0000000..c004f2a
+index 0000000..0a6d81f
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h
 @@ -0,0 +1,77 @@
@@ -1731,14 +1731,14 @@ index 0000000..c004f2a
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "Contract/Api/PanelContract.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +#include <vector>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -1749,7 +1749,7 @@ index 0000000..c004f2a
 +///       slot, rasterised once from `Api/DummyGlyph.svg` and tinted at presentation time.
 +/// note  🔴 No icon artwork is authored, generated or imported — the dummy glyph is the single placeholder,
 +///       and classification is carried by the tint, exactly as the seats below it carry no identity either.
-+///       Affordance glyphs (chevrons, eyes, plus, search) are drawn strokes on the RecordingSurface, not
++///       Affordance glyphs (chevrons, eyes, plus, search) are drawn strokes on the PanelExchange, not
 +///       depot pictures.
 +/// tag   contract, nonallocating, nonthrowing
 +class IconDepot
@@ -1788,11 +1788,11 @@ index 0000000..c004f2a
 +
 +    /// 🧩 Presents the dummy glyph, tinted, fitted and centred inside the seat extent.
 +    /// tag   api, nonallocating, nonthrowing
-+    void PresentGlyph(RecordingSurface& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const;
++    void PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const;
 +
 +    /// 🧩 Presents the dummy glyph, tinted, centred on a point at the given edge extent.
 +    /// tag   api, nonallocating, nonthrowing
-+    void PresentGlyphCentred(RecordingSurface& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const;
++    void PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const;
 +
 +private:
 +
@@ -1800,10 +1800,10 @@ index 0000000..c004f2a
 +    void*                      GlyphSeat = nullptr;   // [-] - the vendor picture identity
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 new file mode 100644
-index 0000000..e0a7440
+index 0000000..19ef219
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 @@ -0,0 +1,131 @@
@@ -1818,7 +1818,7 @@ index 0000000..e0a7440
 +
 +#include <cmath>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +namespace
@@ -1921,7 +1921,7 @@ index 0000000..e0a7440
 +    return Deliver<bool>::Delivered(true);
 +}
 +
-+void IconDepot::PresentGlyph(RecordingSurface& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const
++void IconDepot::PresentGlyph(PanelExchange& Surface, const PlaneExtent& Seat, const InkOrdinate& Tint) const
 +{
 +    const float Edge = Seat.SpanAlong() < Seat.SpanAcross() ? Seat.SpanAlong() : Seat.SpanAcross();
 +    if (Edge <= 1.0f)
@@ -1931,16 +1931,16 @@ index 0000000..e0a7440
 +    Surface.Picture(Spanning(Along, Across, Edge, Edge), GlyphSeat, Tint, Edge * 0.18f);
 +}
 +
-+void IconDepot::PresentGlyphCentred(RecordingSurface& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const
++void IconDepot::PresentGlyphCentred(PanelExchange& Surface, float CentreAlong, float CentreAcross, float EdgeExtent, const InkOrdinate& Tint) const
 +{
 +    Surface.Picture(Spanning(CentreAlong - EdgeExtent * 0.5f, CentreAcross - EdgeExtent * 0.5f, EdgeExtent, EdgeExtent),
 +                    GlyphSeat, Tint, EdgeExtent * 0.18f);
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 new file mode 100644
-index 0000000..1972422
+index 0000000..22ce12c
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 @@ -0,0 +1,61 @@
@@ -1951,11 +1951,11 @@ index 0000000..1972422
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -2004,10 +2004,10 @@ index 0000000..1972422
 +    static void Dismiss();
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
-index 0000000..6ecb036
+index 0000000..8a84a2a
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 @@ -0,0 +1,82 @@
@@ -2020,7 +2020,7 @@ index 0000000..6ecb036
 +
 +#include "imgui.h"
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +Deliver<bool> InterfaceSequence::Adopt(double DisplayAlong, double DisplayAcross)
@@ -2092,10 +2092,10 @@ index 0000000..6ecb036
 +    ImGui::DestroyContext();
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h b/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h
 new file mode 100644
-index 0000000..811561a
+index 0000000..9b4e959
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h
 @@ -0,0 +1,148 @@
@@ -2106,14 +2106,14 @@ index 0000000..811561a
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -2199,7 +2199,7 @@ index 0000000..811561a
 +
 +    /// 🧩 Presents the directory inside the seat extent, one tick.
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat,
 +                 const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
 +                 const OutlinerComposition& Composition, const IconDepot& Depot);
 +
@@ -2233,7 +2233,7 @@ index 0000000..811561a
 +
 +    /// 🧩 Presents one row and its enclosed forest.
 +    /// tag   internal, nonallocating, nonthrowing
-+    void PresentRow(RecordingSurface& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
++    void PresentRow(PanelExchange& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
 +                    std::uint32_t Depth, bool RetentionStanding, const IconDepot& Depot);
 +
 +    /// 🧩 Whether the row, or any row it encloses, carries the retention run.
@@ -2246,10 +2246,10 @@ index 0000000..811561a
 +    std::uint32_t    PresentedCount = 0u;        // [-]  - rows presented this tick
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 new file mode 100644
-index 0000000..de2adf3
+index 0000000..1621c44
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 @@ -0,0 +1,356 @@
@@ -2267,7 +2267,7 @@ index 0000000..de2adf3
 +#include <cstdio>
 +#include <cstring>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -2396,7 +2396,7 @@ index 0000000..de2adf3
 +    return false;
 +}
 +
-+void OutlinerPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat,
++void OutlinerPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat,
 +                            const OutlinerRowDeclaration* Rows, std::uint32_t RowCount,
 +                            const OutlinerComposition& Composition, const IconDepot& ArrivingDepot)
 +{
@@ -2473,7 +2473,7 @@ index 0000000..de2adf3
 +    }
 +}
 +
-+void OutlinerPanel::PresentRow(RecordingSurface& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
++void OutlinerPanel::PresentRow(PanelExchange& Surface, const PlaneExtent& Body, const OutlinerRowDeclaration& Row,
 +                               std::uint32_t Depth, bool RetentionStanding, const IconDepot& RowDepot)
 +{
 +    if (RetentionStanding && !Retained(Row))
@@ -2608,10 +2608,723 @@ index 0000000..de2adf3
 +            PresentRow(Surface, Body, Row.Enclosed[Inner], Depth + 1u, RetentionStanding, RowDepot);
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
+diff --git a/Engine/SlateUI/Interface/PanelExchange/Api/PanelExchange.h b/Engine/SlateUI/Interface/PanelExchange/Api/PanelExchange.h
+new file mode 100644
+index 0000000..9976263
+--- /dev/null
++++ b/Engine/SlateUI/Interface/PanelExchange/Api/PanelExchange.h
+@@ -0,0 +1,234 @@
++//============================================================================================================================================
++//                                                         RECORDINGSURFACE.H
++//============================================================================================================================================
++// 🧩 Primitives in, recorded commands out — the standalone drawing seam over the vendored interface library, with no ImGui spelling in the Api.
++
++#pragma once
++
++#include "Contract/Api/PanelContract.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++
++#include <cstdint>
++
++namespace Rift
++{
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                     THE PLANE EXTENT
++//------------------------------------------------------------------------------------------------------------------------
++
++/// 🧩 One axis-aligned extent in display pixels, stated as its two corners.
++/// note  The ordinate increases downward, as the display does.
++/// tag   contract, nonallocating, nonthrowing
++struct PlaneExtent
++{
++    float  LeastAlong  = 0.0f;   // [px] - leading edge
++    float  LeastAcross = 0.0f;   // [px] - upper edge
++    float  MostAlong   = 0.0f;   // [px] - trailing edge
++    float  MostAcross  = 0.0f;   // [px] - lower edge
++
++    constexpr float SpanAlong() const   { return MostAlong  - LeastAlong;  }
++    constexpr float SpanAcross() const  { return MostAcross - LeastAcross; }
++
++    constexpr bool Encloses(float Along, float Across) const
++    {
++        return Along >= LeastAlong && Along < MostAlong && Across >= LeastAcross && Across < MostAcross;
++    }
++
++    constexpr PlaneExtent Inset(float Along, float Across) const
++    {
++        return PlaneExtent{ LeastAlong + Along, LeastAcross + Across, MostAlong - Along, MostAcross - Across };
++    }
++};
++
++/// 🧩 Constructs an extent from an origin and a span.
++/// cost  ✔️
++constexpr PlaneExtent Spanning(float Along, float Across, float ExtentAlong, float ExtentAcross)
++{
++    return PlaneExtent{ Along, Across, Along + ExtentAlong, Across + ExtentAcross };
++}
++
++/// 🧩 The across ordinate that centres a run of the given extent inside a row.
++/// cost  ✔️
++constexpr float CentredAcross(const PlaneExtent& Extent, float RunExtent)
++{
++    return Extent.LeastAcross + (Extent.SpanAcross() - RunExtent) * 0.5f;
++}
++
++/// 🧩 Which corners of a rounded extent carry the radius.
++/// tag   contract
++enum class CornerSelection : std::uint32_t
++{
++    None          = 0u,   // [-] - square
++    All           = 1u,   // [-] - every corner
++    Upper         = 2u,   // [-] - the two upper corners
++    Lower         = 3u,   // [-] - the two lower corners
++    UpperLeading  = 4u,   // [-] - the upper leading corner only
++    UpperTrailing = 5u,   // [-] - the upper trailing corner only
++    LowerLeading  = 6u,   // [-] - the lower leading corner only
++    LowerTrailing = 7u    // [-] - the lower trailing corner only
++};
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                    THE RECORDING SEAM
++//------------------------------------------------------------------------------------------------------------------------
++
++/// 🧩 The standalone recording seam: rounded grounds, hair edges, text runs and glyph strokes recorded into
++///       the vendored interface library's draw list, with the pointer sampled once per tick.
++/// note  The Api names no ImGui spelling; the Source is the one place the vendored library is addressed,
++///       exactly as the engine's SlateUI unit is the only unit permitted to reference it.
++/// tag   contract, nonallocating, nonthrowing
++class PanelExchange
++{
++public:
++
++    /// 🧩 Which of the two shell layers a tick's recording is laid into.
++    /// tag   contract
++    enum class ShellLayer : std::uint32_t
++    {
++        Beneath      = 0u,   // [-] - behind every window; the workspace ground
++        Above        = 1u,   // [-] - in front of all windows; overlays
++        LayerCount   = 2u    // [-] - the closed count, never a layer
++    };
++
++    /// 🧩 The pointer condition sampled at adoption.
++    /// tag   contract, nonallocating, nonthrowing
++    struct PointerCondition
++    {
++        float  Along          = -1.0e6f;   // [px] - pointer along ordinate
++        float  Across         = -1.0e6f;   // [px] - pointer across ordinate
++        bool   PrimaryDown    = false;     // [-]  - primary button stands down
++        bool   PrimaryPressed = false;     // [-]  - primary button edge, pressed this tick
++        bool   SecondaryDown  = false;     // [-]  - secondary button stands down
++    };
++
++    PanelExchange()                                = default;
++    PanelExchange(const PanelExchange&)         = delete;
++    PanelExchange& operator=(const PanelExchange&) = delete;
++    ~PanelExchange()                               = default;
++
++    /// 🧩 Opens a tick's recording against one shell layer and samples the arrived pointer.
++    /// out   Deliver  [-]  refuses with CapabilityAbsent when no interface context is current
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    Deliver<bool> Adopt(ShellLayer Layer = ShellLayer::Beneath);
++
++    /// 🧩 Closes the standing tick's recording. A no-op when nothing stands adopted.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    void Seal();
++
++    /// 🧩 The pointer condition sampled at the last adoption.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    const PointerCondition& Pointer() const   { return Arrived; }
++
++    /// 🧩 A pointer arrival fraction for a row: one when the pointer rests inside the extent.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    bool PointerWithin(const PlaneExtent& Extent) const
++    {
++        return Arrived.Along >= Extent.LeastAlong && Arrived.Along < Extent.MostAlong &&
++               Arrived.Across >= Extent.LeastAcross && Arrived.Across < Extent.MostAcross;
++    }
++
++    // ═══ Recording primitives ═══
++
++    /// 🧩 Records one rounded, filled ground.
++    /// tag   api, nonallocating, nonthrowing
++    void Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners = CornerSelection::All);
++
++    /// 🧩 Records one rounded hair edge stroked inside the extent.
++    /// tag   api, nonallocating, nonthrowing
++    void Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners = CornerSelection::All);
++
++/// 🧩 Records one vertical scrim, blended from the upper ink to the lower ink.
++/// tag   api, nonallocating, nonthrowing
++void Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower);
++
++/// 🧩 Records one horizontal scrim, blended from the leading ink to the trailing ink.
++/// tag   api, nonallocating, nonthrowing
++void ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing);
++
++    /// 🧩 Records one text run at the given presentation size, snapped to the nearest crisp size.
++    /// tag   api, nonallocating, nonthrowing
++    void TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size = 13.0f);
++
++    /// 🧩 Records one text run clipped to an extent, trailing-ellipsised when it exceeds the span.
++    /// tag   api, nonallocating, nonthrowing
++    void TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong);
++
++    /// 🧩 Measures one run at the given presentation size.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    float MeasureRun(const char* Run, float Size = 13.0f) const;
++
++    /// 🧩 The crisp line extent of the nearest presentation size.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    float RunExtent(float Size = 13.0f) const;
++
++    /// 🧩 The along ordinate that centres a run inside an extent.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    float CentredAlong(const PlaneExtent& Extent, const char* Run, float Size = 13.0f) const;
++
++    /// 🧩 Records one filled disc.
++    /// tag   api, nonallocating, nonthrowing
++    void Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++    /// 🧩 Records one tinted picture — the rasterised glyph an IconDepot seats — inside a rounded extent.
++    /// in    VendorIdentity  [-]  the depot-issued picture identity
++    /// tag   api, nonallocating, nonthrowing
++    void Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners = CornerSelection::All);
++
++    /// 🧩 Records one disc outline.
++    /// tag   api, nonallocating, nonthrowing
++    void Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink);
++
++    /// 🧩 Records one straight stroke between two ordinates.
++    /// tag   api, nonallocating, nonthrowing
++    void Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink);
++
++    /// 🧩 Records one horizontal or vertical hair rule.
++    /// tag   api, nonallocating, nonthrowing
++    void Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink);
++
++    // ═══ Affordance glyphs (drawn strokes, not icon assets) ═══
++
++    /// 🧩 Records one chevron, rotated to point down when Down, right otherwise.
++    /// tag   api, nonallocating, nonthrowing
++    void Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down);
++
++    /// 🧩 Records the eye affordance — closed with a strike when Absent.
++    /// tag   api, nonallocating, nonthrowing
++    void EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent);
++
++    /// 🧩 Records the search affordance — a disc with a handle.
++    /// tag   api, nonallocating, nonthrowing
++    void SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++    /// 🧩 Records the plus affordance.
++    /// tag   api, nonallocating, nonthrowing
++    void PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++    /// 🧩 Records the cross affordance (plus rotated 45 degrees).
++    /// tag   api, nonallocating, nonthrowing
++    void CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++    /// 🧩 Records the check affordance.
++    /// tag   api, nonallocating, nonthrowing
++    void CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++    /// 🧩 Records the trash affordance — a bin outline with two uprights.
++    /// tag   api, nonallocating, nonthrowing
++    void TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
++
++private:
++
++    PointerCondition  Arrived;              // [-] - sampled at adoption
++    void*             Recording   = nullptr;   // [-] - the vendored draw list, untyped in the Api
++    bool              Standing    = false;     // [-] - whether a tick stands adopted
++};
++
++}   // namespace Rift
+diff --git a/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp b/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp
+new file mode 100644
+index 0000000..878c1da
+--- /dev/null
++++ b/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp
+@@ -0,0 +1,467 @@
++//============================================================================================================================================
++//                                                        RECORDINGSURFACE.CPP
++//============================================================================================================================================
++// 🧩 The one translation unit that addresses the vendored interface library — every recorded primitive lands in its draw list.
++
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
++
++#include "imgui.h"
++
++#include <cmath>
++#include <cstdint>
++#include <cstdio>
++#include <cstring>
++
++namespace Rift
++{  
++namespace
++{
++
++constexpr float _pi = 3.14159265358979323846f;   // [-] - circle constant
++
++/// 🧩 Converts one ink into the vendored colour ordinate.
++/// cost  ✔️
++ImVec4 InkToVec4(const InkOrdinate& Ink)
++{
++    return ImVec4(Ink.Red / 255.0f, Ink.Green / 255.0f, Ink.Blue / 255.0f, Ink.Opacity / 255.0f);
++}
++
++/// 🧩 Converts the corner selection into the vendored rounding flags.
++/// cost  ✔️
++ImDrawFlags CornerFlags(CornerSelection Corners)
++{
++    switch (Corners)
++    {
++        case CornerSelection::None:          return ImDrawFlags_RoundCornersNone;
++        case CornerSelection::Upper:         return ImDrawFlags_RoundCornersTop;
++        case CornerSelection::Lower:         return ImDrawFlags_RoundCornersBottom;
++        case CornerSelection::UpperLeading:  return ImDrawFlags_RoundCornersTopLeft;
++        case CornerSelection::UpperTrailing: return ImDrawFlags_RoundCornersTopRight;
++        case CornerSelection::LowerLeading:  return ImDrawFlags_RoundCornersBottomLeft;
++        case CornerSelection::LowerTrailing: return ImDrawFlags_RoundCornersBottomRight;
++        case CornerSelection::All:           break;
++    }
++    return ImDrawFlags_RoundCornersAll;
++}
++
++/// 🧩 Decodes one UTF-8 codepoint and advances the cursor.
++/// out   Codepoint  [-]  the decoded codepoint; Cursor names the next byte
++/// cost  ✔️
++std::uint32_t DecodeCodepoint(const char* Run, std::int32_t& Cursor)
++{
++    const std::uint8_t Leading = static_cast<std::uint8_t>(Run[Cursor]);
++    if ((Leading & 0x80u) == 0u)
++    {
++        Cursor += 1;
++        return Leading;
++    }
++    if ((Leading & 0xE0u) == 0xC0u && Run[Cursor + 1] != '\0')
++    {
++        const std::uint32_t Codepoint = ((Leading & 0x1Fu) << 6) | (static_cast<std::uint8_t>(Run[Cursor + 1]) & 0x3Fu);
++        Cursor += 2;
++        return Codepoint;
++    }
++    if ((Leading & 0xF0u) == 0xE0u && Run[Cursor + 1] != '\0' && Run[Cursor + 2] != '\0')
++    {
++        const std::uint32_t Codepoint = ((Leading & 0x0Fu) << 12)
++                                      | ((static_cast<std::uint8_t>(Run[Cursor + 1]) & 0x3Fu) << 6)
++                                      |  (static_cast<std::uint8_t>(Run[Cursor + 2]) & 0x3Fu);
++        Cursor += 3;
++        return Codepoint;
++    }
++    Cursor += 1;
++    return Leading;
++}
++
++/// 🧩 The drawn stand-in for a codepoint the default typeface does not seat.
++/// out   true when the codepoint has a drawn stand-in; Advance carries its measured advance
++/// cost  ✔️
++bool DrawnStandIn(std::uint32_t Codepoint, float& Advance)
++{
++    switch (Codepoint)
++    {
++        case 0x00B7u:  Advance = 4.0f;  return true;   // · - middle dot
++        case 0x00B0u:  Advance = 5.0f;  return true;   // ° - degree ring
++        case 0x2014u:  Advance = 8.0f;  return true;   // — - em dash, drawn as a rule
++        default:       return false;
++    }
++}
++
++}   // namespace
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                       ADOPTION
++//------------------------------------------------------------------------------------------------------------------------
++
++Deliver<bool> PanelExchange::Adopt(ShellLayer Layer)
++{
++    ImGuiIO& VendorIO = ImGui::GetIO();
++    if (VendorIO.Fonts == nullptr)
++        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "no font atlas stands constructed" });
++
++    Recording = (Layer == ShellLayer::Above) ? static_cast<void*>(ImGui::GetForegroundDrawList(ImGui::GetMainViewport()))
++                                             : static_cast<void*>(ImGui::GetBackgroundDrawList(ImGui::GetMainViewport()));
++    Standing  = true;
++
++    Arrived.Along          = VendorIO.MousePos.x;
++    Arrived.Across         = VendorIO.MousePos.y;
++    Arrived.PrimaryDown    = VendorIO.MouseDown[0];
++    Arrived.PrimaryPressed = ImGui::IsMouseClicked(0);
++    Arrived.SecondaryDown  = VendorIO.MouseDown[1];
++
++    return Deliver<bool>::Delivered(true);
++}
++
++void PanelExchange::Seal()
++{
++    Standing  = false;
++    Recording = nullptr;
++}
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                    GROUNDS AND EDGES
++//------------------------------------------------------------------------------------------------------------------------
++
++void PanelExchange::Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners)
++{
++    if (!Standing)
++        return;
++    ImDrawList* List = static_cast<ImDrawList*>(Recording);
++    List->AddRectFilled(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
++                        ImVec2(Extent.MostAlong, Extent.MostAcross),
++                        ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners));
++}
++
++void PanelExchange::Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners)
++{
++    if (!Standing)
++        return;
++    ImDrawList* List = static_cast<ImDrawList*>(Recording);
++    List->AddRect(ImVec2(Extent.LeastAlong + Thickness * 0.5f, Extent.LeastAcross + Thickness * 0.5f),
++                  ImVec2(Extent.MostAlong - Thickness * 0.5f, Extent.MostAcross - Thickness * 0.5f),
++                  ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners), Thickness);
++}
++
++void PanelExchange::Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower)
++{
++    if (!Standing)
++        return;
++    ImDrawList* List = static_cast<ImDrawList*>(Recording);
++    List->AddRectFilledMultiColor(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
++                                  ImVec2(Extent.MostAlong, Extent.MostAcross),
++                                  ImGui::GetColorU32(InkToVec4(Upper)), ImGui::GetColorU32(InkToVec4(Upper)),
++                                  ImGui::GetColorU32(InkToVec4(Lower)), ImGui::GetColorU32(InkToVec4(Lower)));
++}
++
++void PanelExchange::ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing)
++{
++    if (!Standing)
++        return;
++    ImDrawList* List = static_cast<ImDrawList*>(Recording);
++    List->AddRectFilledMultiColor(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
++                                  ImVec2(Extent.MostAlong, Extent.MostAcross),
++                                  ImGui::GetColorU32(InkToVec4(Leading)), ImGui::GetColorU32(InkToVec4(Trailing)),
++                                  ImGui::GetColorU32(InkToVec4(Trailing)), ImGui::GetColorU32(InkToVec4(Leading)));
++}
++
++void PanelExchange::Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    if (!Standing)
++        return;
++    static_cast<ImDrawList*>(Recording)->AddCircleFilled(ImVec2(CentreAlong, CentreAcross), Radius,
++                                                          ImGui::GetColorU32(InkToVec4(Ink)), 24);
++}
++
++void PanelExchange::Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners)
++{
++    if (!Standing || VendorIdentity == nullptr)
++        return;
++    const ImTextureRef TexRef(static_cast<ImTextureID>(reinterpret_cast<std::uintptr_t>(VendorIdentity)));
++    static_cast<ImDrawList*>(Recording)->AddImageRounded(TexRef,
++                                                         ImVec2(Extent.LeastAlong, Extent.LeastAcross),
++                                                         ImVec2(Extent.MostAlong, Extent.MostAcross),
++                                                         ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
++                                                         ImGui::GetColorU32(InkToVec4(Tint)), Radius, CornerFlags(Corners));
++}
++
++void PanelExchange::Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink)
++{
++    if (!Standing)
++        return;
++    static_cast<ImDrawList*>(Recording)->AddCircle(ImVec2(CentreAlong, CentreAcross), Radius,
++                                                    ImGui::GetColorU32(InkToVec4(Ink)), 24, Thickness);
++}
++
++void PanelExchange::Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink)
++{
++    if (!Standing)
++        return;
++    static_cast<ImDrawList*>(Recording)->AddLine(ImVec2(AlongA, AcrossA), ImVec2(AlongB, AcrossB),
++                                                  ImGui::GetColorU32(InkToVec4(Ink)), Thickness);
++}
++
++void PanelExchange::Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink)
++{
++    Stroke(Along, Across, Along + ExtentAlong, Across, Thickness, Ink);
++}
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                       TEXT RUNS
++//------------------------------------------------------------------------------------------------------------------------
++
++namespace
++{
++
++/// 🧩 The vendored typeface whose crisp size lies nearest the requested presentation size.
++/// cost  ✔️
++ImFont* TypefaceFor(float Size)
++{
++    ImGuiIO&      VendorIO = ImGui::GetIO();
++    ImFont*       Nearest  = VendorIO.Fonts->Fonts[0];
++    float         NearestGap = 1.0e9f;
++    for (ImFont* Standing : VendorIO.Fonts->Fonts)
++    {
++        const float Gap = (Size > Standing->LegacySize) ? Size - Standing->LegacySize : Standing->LegacySize - Size;
++        if (Gap < NearestGap)
++        {
++            Nearest     = Standing;
++            NearestGap  = Gap;
++        }
++    }
++    return Nearest;
++}
++
++}   // namespace
++
++void PanelExchange::TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size)
++{
++    if (!Standing || Run == nullptr || Run[0] == '\0')
++        return;
++
++    ImDrawList* List        = static_cast<ImDrawList*>(Recording);
++    ImFont*     Face        = TypefaceFor(Size);
++    const float PresentedSize = Face->LegacySize;   // 📝 the nearest baked size — lazy bakes never trigger
++    const ImU32 Packed      = ImGui::GetColorU32(InkToVec4(Ink));
++    float       Cursor      = Along;
++
++    std::int32_t Scan = 0;
++    while (Run[Scan] != '\0')
++    {
++        const std::int32_t SegmentStart = Scan;
++        std::uint32_t      Codepoint    = 0;
++        float              Advance      = 0.0f;
++        while (Run[Scan] != '\0')
++        {
++            std::int32_t Probe = Scan;
++            Codepoint = DecodeCodepoint(Run, Probe);
++            if (DrawnStandIn(Codepoint, Advance))
++                break;
++            Scan = Probe;
++        }
++
++        if (Scan > SegmentStart)
++        {
++            const std::int32_t Count = Scan - SegmentStart;
++            List->AddText(Face, PresentedSize, ImVec2(Cursor, Across), Packed, Run + SegmentStart, Run + SegmentStart + Count);
++            Cursor += Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, Run + SegmentStart, Run + SegmentStart + Count).x;
++        }
++
++        if (Run[Scan] == '\0')
++            break;
++
++        // ① The drawn stand-ins — middle dot, degree ring, em dash rule.
++        const float Baseline = Across + PresentedSize * 0.78f;
++        if (Codepoint == 0x00B7u)
++            Medallion(Cursor + Advance * 0.5f, Baseline - PresentedSize * 0.30f, 1.1f, Ink);
++        else if (Codepoint == 0x00B0u)
++            Ring(Cursor + Advance * 0.5f, Baseline - PresentedSize * 0.62f, 1.4f, 1.0f, Ink);
++        else if (Codepoint == 0x2014u)
++            Rule(Cursor, Baseline - 1.0f, Advance, 1.0f, Ink);
++        Cursor += Advance;
++
++        Scan += (Codepoint >= 0x0800u) ? 3 : ((Codepoint >= 0x0080u) ? 2 : 1);
++    }
++}
++
++void PanelExchange::TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong)
++{
++    if (!Standing || Run == nullptr)
++        return;
++
++    // ① Measure with stand-ins already folded in, then retreat whole stand-in boundaries until it fits.
++    float Measured = MeasureRun(Run, Size);
++    if (Measured <= ExtentAlong)
++    {
++        TextRun(Along, Across, Run, Ink, Size);
++        return;
++    }
++
++    ImFont* Face = TypefaceFor(Size);
++    const float PresentedSize = Face->LegacySize;
++    char    Trimmed[256];
++    std::int32_t Count = 0;
++    while (Run[Count] != '\0' && Count < 255)
++    {
++        Trimmed[Count] = Run[Count];
++        ++Count;
++    }
++    Trimmed[Count] = '\0';
++
++    const float EllipsisExtent = Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, "...").x;
++    while (Count > 0 && MeasureRun(Trimmed, Size) + EllipsisExtent > ExtentAlong)
++    {
++        // ② Retreat past a whole UTF-8 codepoint each step.
++        --Count;
++        while (Count > 0 && (static_cast<std::uint8_t>(Trimmed[Count]) & 0xC0u) == 0x80u)
++            --Count;
++        Trimmed[Count] = '\0';
++    }
++
++    TextRun(Along, Across, Trimmed, Ink, Size);
++    TextRun(Along + MeasureRun(Trimmed, Size), Across, "...", Ink, Size);
++}
++
++float PanelExchange::MeasureRun(const char* Run, float Size) const
++{
++    if (Run == nullptr)
++        return 0.0f;
++
++    ImFont* Face        = TypefaceFor(Size);
++    const float PresentedSize = Face->LegacySize;
++    float   Extent      = 0.0f;
++    std::int32_t Scan = 0;
++    while (Run[Scan] != '\0')
++    {
++        const std::int32_t SegmentStart = Scan;
++        std::uint32_t      Codepoint    = 0;
++        float              Advance      = 0.0f;
++        while (Run[Scan] != '\0')
++        {
++            std::int32_t Probe = Scan;
++            Codepoint = DecodeCodepoint(Run, Probe);
++            if (DrawnStandIn(Codepoint, Advance))
++                break;
++            Scan = Probe;
++        }
++
++        if (Scan > SegmentStart)
++            Extent += Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, Run + SegmentStart, Run + SegmentStart + (Scan - SegmentStart)).x;
++
++        if (Run[Scan] == '\0')
++            break;
++
++        Extent += Advance;
++        Scan += (Codepoint >= 0x0800u) ? 3 : ((Codepoint >= 0x0080u) ? 2 : 1);
++    }
++    return Extent;
++}
++
++float PanelExchange::RunExtent(float Size) const
++{
++    return TypefaceFor(Size)->LegacySize;
++}
++
++float PanelExchange::CentredAlong(const PlaneExtent& Extent, const char* Run, float Size) const
++{
++    return Extent.LeastAlong + (Extent.SpanAlong() - MeasureRun(Run, Size)) * 0.5f;
++}
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                    AFFORDANCE GLYPHS
++//------------------------------------------------------------------------------------------------------------------------
++
++void PanelExchange::Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down)
++{
++    // ① Down — the two strokes meet at the lower ordinate; right — they meet at the trailing ordinate.
++    if (Down)
++    {
++        Stroke(CentreAlong - Radius, CentreAcross - Radius * 0.55f, CentreAlong, CentreAcross + Radius * 0.55f, 1.7f, Ink);
++        Stroke(CentreAlong,          CentreAcross + Radius * 0.55f, CentreAlong + Radius, CentreAcross - Radius * 0.55f, 1.7f, Ink);
++    }
++    else
++    {
++        Stroke(CentreAlong - Radius * 0.55f, CentreAcross - Radius, CentreAlong + Radius * 0.55f, CentreAcross, 1.7f, Ink);
++        Stroke(CentreAlong + Radius * 0.55f, CentreAcross,          CentreAlong - Radius * 0.55f, CentreAcross + Radius, 1.7f, Ink);
++    }
++}
++
++void PanelExchange::EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent)
++{
++    if (!Standing)
++        return;
++    ImDrawList* List   = static_cast<ImDrawList*>(Recording);
++    const ImU32 Packed = ImGui::GetColorU32(InkToVec4(Ink));
++
++    const float Squash = 0.70f;
++    const float LeadingEdge   = _pi * 1.05f;
++    const float TrailingEdge  = _pi * 1.95f;
++
++    if (Absent)
++    {
++        // ① One lowered lid plus the strike.
++        List->PathClear();
++        for (int Ordinal = 0; Ordinal <= 10; ++Ordinal)
++        {
++            const float θ = LeadingEdge + (TrailingEdge - LeadingEdge) * Ordinal / 10.0f;
++            List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash + Radius * 0.18f));
++        }
++        List->PathStroke(Packed, 0, 1.4f);
++        Stroke(CentreAlong - Radius * 0.75f, CentreAcross - Radius * 0.35f, CentreAlong + Radius * 0.75f, CentreAcross + Radius * 0.60f, 1.4f, Ink);
++        return;
++    }
++
++    // ① Upper lid.
++    List->PathClear();
++    for (int Ordinal = 0; Ordinal <= 12; ++Ordinal)
++    {
++        const float θ = _pi * 1.02f + _pi * 0.96f * Ordinal / 12.0f;
++        List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash));
++    }
++    List->PathStroke(Packed, 0, 1.4f);
++    // ② Lower lid.
++    List->PathClear();
++    for (int Ordinal = 0; Ordinal <= 12; ++Ordinal)
++    {
++        const float θ = _pi * 0.98f - _pi * 0.96f * Ordinal / 12.0f;
++        List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash));
++    }
++    List->PathStroke(Packed, 0, 1.4f);
++    // ③ Pupil.
++    Medallion(CentreAlong, CentreAcross + Radius * 0.04f, Radius * 0.26f, Ink);
++}
++
++void PanelExchange::SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    Ring(CentreAlong - Radius * 0.18f, CentreAcross - Radius * 0.18f, Radius * 0.62f, 1.5f, Ink);
++    Stroke(CentreAlong + Radius * 0.34f, CentreAcross + Radius * 0.34f,
++           CentreAlong + Radius * 0.78f, CentreAcross + Radius * 0.78f, 1.5f, Ink);
++}
++
++void PanelExchange::PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    Stroke(CentreAlong - Radius, CentreAcross, CentreAlong + Radius, CentreAcross, 1.5f, Ink);
++    Stroke(CentreAlong, CentreAcross - Radius, CentreAlong, CentreAcross + Radius, 1.5f, Ink);
++}
++
++void PanelExchange::CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    Stroke(CentreAlong - Radius, CentreAcross - Radius, CentreAlong + Radius, CentreAcross + Radius, 1.5f, Ink);
++    Stroke(CentreAlong + Radius, CentreAcross - Radius, CentreAlong - Radius, CentreAcross + Radius, 1.5f, Ink);
++}
++
++void PanelExchange::CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    Stroke(CentreAlong - Radius, CentreAcross, CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.6f, Ink);
++    Stroke(CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, CentreAlong + Radius, CentreAcross - Radius * 0.6f, 1.6f, Ink);
++}
++
++void PanelExchange::TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
++{
++    const PlaneExtent Bin = Spanning(CentreAlong - Radius * 0.75f, CentreAcross - Radius * 0.45f, Radius * 1.5f, Radius * 1.35f);
++    Edge(Bin, Ink, 1.3f, 1.5f, CornerSelection::Lower);
++    Stroke(CentreAlong - Radius, CentreAcross - Radius * 0.55f, CentreAlong + Radius, CentreAcross - Radius * 0.55f, 1.3f, Ink);
++    Stroke(CentreAlong - Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
++    Stroke(CentreAlong + Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong + Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
++}
++
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h b/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h
 new file mode 100644
-index 0000000..c61b4f6
+index 0000000..defcc53
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h
 @@ -0,0 +1,157 @@
@@ -2622,15 +3335,15 @@ index 0000000..c61b4f6
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -2752,7 +3465,7 @@ index 0000000..c61b4f6
 +    /// in    Declared   [-]  the inspected row; nullptr presents the vacated seat
 +    /// in    Revisions  [-]  borrowed; the whole revision record, filtered to the declared walk
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                 ProfileOrdinates& Profile, const IconDepot& Depot,
 +                 const RevisionDeclaration* Revisions = nullptr, std::uint32_t RevisionCount = 0u,
 +                 const OutlinerRowDeclaration* Forest = nullptr, std::uint32_t ForestCount = 0u);
@@ -2764,17 +3477,17 @@ index 0000000..c61b4f6
 +
 +    /// 🧩 Presents the history page — the revision stack for the declared row and everything it encloses.
 +    /// tag   internal, nonallocating, nonthrowing
-+    void PresentHistory(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++    void PresentHistory(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                        const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
 +                        const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount, const IconDepot& Depot);
 +
 +    float ScrollAcross = 0.0f;   // [px] - body scroll ordinate
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 new file mode 100644
-index 0000000..3a641b9
+index 0000000..ed5abc8
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 @@ -0,0 +1,683 @@
@@ -2792,7 +3505,7 @@ index 0000000..3a641b9
 +#include <cstdio>
 +#include <cstring>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -2917,7 +3630,7 @@ index 0000000..3a641b9
 +
 +}   // namespace
 +
-+void PropertiesPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++void PropertiesPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                              ProfileOrdinates& Profile, const IconDepot& Depot,
 +                              const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
 +                              const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount)
@@ -3275,7 +3988,7 @@ index 0000000..3a641b9
 +//                                                       THE HISTORY
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void PropertiesPanel::PresentHistory(RecordingSurface& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
++void PropertiesPanel::PresentHistory(PanelExchange& Surface, const PlaneExtent& Seat, const OutlinerRowDeclaration* Declared,
 +                                     const RevisionDeclaration* Revisions, std::uint32_t RevisionCount,
 +                                     const OutlinerRowDeclaration* Forest, std::uint32_t ForestCount, const IconDepot& Depot)
 +{
@@ -3460,10 +4173,10 @@ index 0000000..3a641b9
 +    }
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h b/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h
 new file mode 100644
-index 0000000..efa082e
+index 0000000..f4976bb
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h
 @@ -0,0 +1,90 @@
@@ -3474,12 +4187,12 @@ index 0000000..efa082e
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +
 +#include <cstdint>
 +#include <vector>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -3556,13 +4269,14 @@ index 0000000..efa082e
 +    std::uint32_t                    AtlasAcrossExtent = 0u;   // [px]
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 new file mode 100644
-index 0000000..7073d60
+index 0000000..31f8b08
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
-@@ -0,0 +1,371 @@
+@@ -0,0 +1,372 @@
++#define _CRT_SECURE_NO_WARNINGS
 +//============================================================================================================================================
 +//                                                            RASTERCODEC.CPP
 +//============================================================================================================================================
@@ -3579,7 +4293,7 @@ index 0000000..7073d60
 +#include <filesystem>
 +#include <system_error>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +Deliver<bool> RasterCodec::SeatAtlas(void* Identity)
@@ -3933,724 +4647,10 @@ index 0000000..7073d60
 +    return Deliver<bool>::Delivered(true);
 +}
 +
-+}   // namespace Slate
-diff --git a/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h b/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h
-new file mode 100644
-index 0000000..8986f9a
---- /dev/null
-+++ b/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h
-@@ -0,0 +1,234 @@
-+//============================================================================================================================================
-+//                                                         RECORDINGSURFACE.H
-+//============================================================================================================================================
-+// 🧩 Primitives in, recorded commands out — the standalone drawing seam over the vendored interface library, with no ImGui spelling in the Api.
-+
-+#pragma once
-+
-+#include "Contract/Api/DeliveryContract.h"
-+#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
-+
-+#include <cstdint>
-+
-+namespace Slate
-+{
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                     THE PLANE EXTENT
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+/// 🧩 One axis-aligned extent in display pixels, stated as its two corners.
-+/// note  The ordinate increases downward, as the display does.
-+/// tag   contract, nonallocating, nonthrowing
-+struct PlaneExtent
-+{
-+    float  LeastAlong  = 0.0f;   // [px] - leading edge
-+    float  LeastAcross = 0.0f;   // [px] - upper edge
-+    float  MostAlong   = 0.0f;   // [px] - trailing edge
-+    float  MostAcross  = 0.0f;   // [px] - lower edge
-+
-+    constexpr float SpanAlong() const   { return MostAlong  - LeastAlong;  }
-+    constexpr float SpanAcross() const  { return MostAcross - LeastAcross; }
-+
-+    constexpr bool Encloses(float Along, float Across) const
-+    {
-+        return Along >= LeastAlong && Along < MostAlong && Across >= LeastAcross && Across < MostAcross;
-+    }
-+
-+    constexpr PlaneExtent Inset(float Along, float Across) const
-+    {
-+        return PlaneExtent{ LeastAlong + Along, LeastAcross + Across, MostAlong - Along, MostAcross - Across };
-+    }
-+};
-+
-+/// 🧩 Constructs an extent from an origin and a span.
-+/// cost  ✔️
-+constexpr PlaneExtent Spanning(float Along, float Across, float ExtentAlong, float ExtentAcross)
-+{
-+    return PlaneExtent{ Along, Across, Along + ExtentAlong, Across + ExtentAcross };
-+}
-+
-+/// 🧩 The across ordinate that centres a run of the given extent inside a row.
-+/// cost  ✔️
-+constexpr float CentredAcross(const PlaneExtent& Extent, float RunExtent)
-+{
-+    return Extent.LeastAcross + (Extent.SpanAcross() - RunExtent) * 0.5f;
-+}
-+
-+/// 🧩 Which corners of a rounded extent carry the radius.
-+/// tag   contract
-+enum class CornerSelection : std::uint32_t
-+{
-+    None          = 0u,   // [-] - square
-+    All           = 1u,   // [-] - every corner
-+    Upper         = 2u,   // [-] - the two upper corners
-+    Lower         = 3u,   // [-] - the two lower corners
-+    UpperLeading  = 4u,   // [-] - the upper leading corner only
-+    UpperTrailing = 5u,   // [-] - the upper trailing corner only
-+    LowerLeading  = 6u,   // [-] - the lower leading corner only
-+    LowerTrailing = 7u    // [-] - the lower trailing corner only
-+};
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                    THE RECORDING SEAM
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+/// 🧩 The standalone recording seam: rounded grounds, hair edges, text runs and glyph strokes recorded into
-+///       the vendored interface library's draw list, with the pointer sampled once per tick.
-+/// note  The Api names no ImGui spelling; the Source is the one place the vendored library is addressed,
-+///       exactly as the engine's SlateUI unit is the only unit permitted to reference it.
-+/// tag   contract, nonallocating, nonthrowing
-+class RecordingSurface
-+{
-+public:
-+
-+    /// 🧩 Which of the two shell layers a tick's recording is laid into.
-+    /// tag   contract
-+    enum class ShellLayer : std::uint32_t
-+    {
-+        Beneath      = 0u,   // [-] - behind every window; the workspace ground
-+        Above        = 1u,   // [-] - in front of all windows; overlays
-+        LayerCount   = 2u    // [-] - the closed count, never a layer
-+    };
-+
-+    /// 🧩 The pointer condition sampled at adoption.
-+    /// tag   contract, nonallocating, nonthrowing
-+    struct PointerCondition
-+    {
-+        float  Along          = -1.0e6f;   // [px] - pointer along ordinate
-+        float  Across         = -1.0e6f;   // [px] - pointer across ordinate
-+        bool   PrimaryDown    = false;     // [-]  - primary button stands down
-+        bool   PrimaryPressed = false;     // [-]  - primary button edge, pressed this tick
-+        bool   SecondaryDown  = false;     // [-]  - secondary button stands down
-+    };
-+
-+    RecordingSurface()                                = default;
-+    RecordingSurface(const RecordingSurface&)         = delete;
-+    RecordingSurface& operator=(const RecordingSurface&) = delete;
-+    ~RecordingSurface()                               = default;
-+
-+    /// 🧩 Opens a tick's recording against one shell layer and samples the arrived pointer.
-+    /// out   Deliver  [-]  refuses with CapabilityAbsent when no interface context is current
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    Deliver<bool> Adopt(ShellLayer Layer = ShellLayer::Beneath);
-+
-+    /// 🧩 Closes the standing tick's recording. A no-op when nothing stands adopted.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    void Seal();
-+
-+    /// 🧩 The pointer condition sampled at the last adoption.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    const PointerCondition& Pointer() const   { return Arrived; }
-+
-+    /// 🧩 A pointer arrival fraction for a row: one when the pointer rests inside the extent.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    bool PointerWithin(const PlaneExtent& Extent) const
-+    {
-+        return Arrived.Along >= Extent.LeastAlong && Arrived.Along < Extent.MostAlong &&
-+               Arrived.Across >= Extent.LeastAcross && Arrived.Across < Extent.MostAcross;
-+    }
-+
-+    // ═══ Recording primitives ═══
-+
-+    /// 🧩 Records one rounded, filled ground.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners = CornerSelection::All);
-+
-+    /// 🧩 Records one rounded hair edge stroked inside the extent.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners = CornerSelection::All);
-+
-+/// 🧩 Records one vertical scrim, blended from the upper ink to the lower ink.
-+/// tag   api, nonallocating, nonthrowing
-+void Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower);
-+
-+/// 🧩 Records one horizontal scrim, blended from the leading ink to the trailing ink.
-+/// tag   api, nonallocating, nonthrowing
-+void ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing);
-+
-+    /// 🧩 Records one text run at the given presentation size, snapped to the nearest crisp size.
-+    /// tag   api, nonallocating, nonthrowing
-+    void TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size = 13.0f);
-+
-+    /// 🧩 Records one text run clipped to an extent, trailing-ellipsised when it exceeds the span.
-+    /// tag   api, nonallocating, nonthrowing
-+    void TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong);
-+
-+    /// 🧩 Measures one run at the given presentation size.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    float MeasureRun(const char* Run, float Size = 13.0f) const;
-+
-+    /// 🧩 The crisp line extent of the nearest presentation size.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    float RunExtent(float Size = 13.0f) const;
-+
-+    /// 🧩 The along ordinate that centres a run inside an extent.
-+    /// cost  ✔️
-+    /// tag   api, nonallocating, nonthrowing
-+    float CentredAlong(const PlaneExtent& Extent, const char* Run, float Size = 13.0f) const;
-+
-+    /// 🧩 Records one filled disc.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records one tinted picture — the rasterised glyph an IconDepot seats — inside a rounded extent.
-+    /// in    VendorIdentity  [-]  the depot-issued picture identity
-+    /// tag   api, nonallocating, nonthrowing
-+    void Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners = CornerSelection::All);
-+
-+    /// 🧩 Records one disc outline.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records one straight stroke between two ordinates.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records one horizontal or vertical hair rule.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink);
-+
-+    // ═══ Affordance glyphs (drawn strokes, not icon assets) ═══
-+
-+    /// 🧩 Records one chevron, rotated to point down when Down, right otherwise.
-+    /// tag   api, nonallocating, nonthrowing
-+    void Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down);
-+
-+    /// 🧩 Records the eye affordance — closed with a strike when Absent.
-+    /// tag   api, nonallocating, nonthrowing
-+    void EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent);
-+
-+    /// 🧩 Records the search affordance — a disc with a handle.
-+    /// tag   api, nonallocating, nonthrowing
-+    void SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records the plus affordance.
-+    /// tag   api, nonallocating, nonthrowing
-+    void PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records the cross affordance (plus rotated 45 degrees).
-+    /// tag   api, nonallocating, nonthrowing
-+    void CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records the check affordance.
-+    /// tag   api, nonallocating, nonthrowing
-+    void CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+    /// 🧩 Records the trash affordance — a bin outline with two uprights.
-+    /// tag   api, nonallocating, nonthrowing
-+    void TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink);
-+
-+private:
-+
-+    PointerCondition  Arrived;              // [-] - sampled at adoption
-+    void*             Recording   = nullptr;   // [-] - the vendored draw list, untyped in the Api
-+    bool              Standing    = false;     // [-] - whether a tick stands adopted
-+};
-+
-+}   // namespace Slate
-diff --git a/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp b/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp
-new file mode 100644
-index 0000000..428b27a
---- /dev/null
-+++ b/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp
-@@ -0,0 +1,468 @@
-+//============================================================================================================================================
-+//                                                        RECORDINGSURFACE.CPP
-+//============================================================================================================================================
-+// 🧩 The one translation unit that addresses the vendored interface library — every recorded primitive lands in its draw list.
-+
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+
-+#include "imgui.h"
-+
-+#include <cmath>
-+#include <cstdint>
-+#include <cstdio>
-+#include <cstring>
-+
-+namespace Slate
-+{
-+
-+namespace
-+{
-+
-+constexpr float _pi = 3.14159265358979323846f;   // [-] - circle constant
-+
-+/// 🧩 Converts one ink into the vendored colour ordinate.
-+/// cost  ✔️
-+ImVec4 InkToVec4(const InkOrdinate& Ink)
-+{
-+    return ImVec4(Ink.Red / 255.0f, Ink.Green / 255.0f, Ink.Blue / 255.0f, Ink.Opacity / 255.0f);
-+}
-+
-+/// 🧩 Converts the corner selection into the vendored rounding flags.
-+/// cost  ✔️
-+ImDrawFlags CornerFlags(CornerSelection Corners)
-+{
-+    switch (Corners)
-+    {
-+        case CornerSelection::None:          return ImDrawFlags_RoundCornersNone;
-+        case CornerSelection::Upper:         return ImDrawFlags_RoundCornersTop;
-+        case CornerSelection::Lower:         return ImDrawFlags_RoundCornersBottom;
-+        case CornerSelection::UpperLeading:  return ImDrawFlags_RoundCornersTopLeft;
-+        case CornerSelection::UpperTrailing: return ImDrawFlags_RoundCornersTopRight;
-+        case CornerSelection::LowerLeading:  return ImDrawFlags_RoundCornersBottomLeft;
-+        case CornerSelection::LowerTrailing: return ImDrawFlags_RoundCornersBottomRight;
-+        case CornerSelection::All:           break;
-+    }
-+    return ImDrawFlags_RoundCornersAll;
-+}
-+
-+/// 🧩 Decodes one UTF-8 codepoint and advances the cursor.
-+/// out   Codepoint  [-]  the decoded codepoint; Cursor names the next byte
-+/// cost  ✔️
-+std::uint32_t DecodeCodepoint(const char* Run, std::int32_t& Cursor)
-+{
-+    const std::uint8_t Leading = static_cast<std::uint8_t>(Run[Cursor]);
-+    if ((Leading & 0x80u) == 0u)
-+    {
-+        Cursor += 1;
-+        return Leading;
-+    }
-+    if ((Leading & 0xE0u) == 0xC0u && Run[Cursor + 1] != '\0')
-+    {
-+        const std::uint32_t Codepoint = ((Leading & 0x1Fu) << 6) | (static_cast<std::uint8_t>(Run[Cursor + 1]) & 0x3Fu);
-+        Cursor += 2;
-+        return Codepoint;
-+    }
-+    if ((Leading & 0xF0u) == 0xE0u && Run[Cursor + 1] != '\0' && Run[Cursor + 2] != '\0')
-+    {
-+        const std::uint32_t Codepoint = ((Leading & 0x0Fu) << 12)
-+                                      | ((static_cast<std::uint8_t>(Run[Cursor + 1]) & 0x3Fu) << 6)
-+                                      |  (static_cast<std::uint8_t>(Run[Cursor + 2]) & 0x3Fu);
-+        Cursor += 3;
-+        return Codepoint;
-+    }
-+    Cursor += 1;
-+    return Leading;
-+}
-+
-+/// 🧩 The drawn stand-in for a codepoint the default typeface does not seat.
-+/// out   true when the codepoint has a drawn stand-in; Advance carries its measured advance
-+/// cost  ✔️
-+bool DrawnStandIn(std::uint32_t Codepoint, float& Advance)
-+{
-+    switch (Codepoint)
-+    {
-+        case 0x00B7u:  Advance = 4.0f;  return true;   // · - middle dot
-+        case 0x00B0u:  Advance = 5.0f;  return true;   // ° - degree ring
-+        case 0x2014u:  Advance = 8.0f;  return true;   // — - em dash, drawn as a rule
-+        default:       return false;
-+    }
-+}
-+
-+}   // namespace
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                       ADOPTION
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+Deliver<bool> RecordingSurface::Adopt(ShellLayer Layer)
-+{
-+    ImGuiIO& VendorIO = ImGui::GetIO();
-+    if (VendorIO.Fonts == nullptr)
-+        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "no font atlas stands constructed" });
-+
-+    Recording = (Layer == ShellLayer::Above) ? static_cast<void*>(ImGui::GetForegroundDrawList(ImGui::GetMainViewport()))
-+                                             : static_cast<void*>(ImGui::GetBackgroundDrawList(ImGui::GetMainViewport()));
-+    Standing  = true;
-+
-+    Arrived.Along          = VendorIO.MousePos.x;
-+    Arrived.Across         = VendorIO.MousePos.y;
-+    Arrived.PrimaryDown    = VendorIO.MouseDown[0];
-+    Arrived.PrimaryPressed = ImGui::IsMouseClicked(0);
-+    Arrived.SecondaryDown  = VendorIO.MouseDown[1];
-+
-+    return Deliver<bool>::Delivered(true);
-+}
-+
-+void RecordingSurface::Seal()
-+{
-+    Standing  = false;
-+    Recording = nullptr;
-+}
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                    GROUNDS AND EDGES
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+void RecordingSurface::Ground(const PlaneExtent& Extent, const InkOrdinate& Ink, float Radius, CornerSelection Corners)
-+{
-+    if (!Standing)
-+        return;
-+    ImDrawList* List = static_cast<ImDrawList*>(Recording);
-+    List->AddRectFilled(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
-+                        ImVec2(Extent.MostAlong, Extent.MostAcross),
-+                        ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners));
-+}
-+
-+void RecordingSurface::Edge(const PlaneExtent& Extent, const InkOrdinate& Ink, float Thickness, float Radius, CornerSelection Corners)
-+{
-+    if (!Standing)
-+        return;
-+    ImDrawList* List = static_cast<ImDrawList*>(Recording);
-+    List->AddRect(ImVec2(Extent.LeastAlong + Thickness * 0.5f, Extent.LeastAcross + Thickness * 0.5f),
-+                  ImVec2(Extent.MostAlong - Thickness * 0.5f, Extent.MostAcross - Thickness * 0.5f),
-+                  ImGui::GetColorU32(InkToVec4(Ink)), Radius, CornerFlags(Corners), Thickness);
-+}
-+
-+void RecordingSurface::Scrim(const PlaneExtent& Extent, const InkOrdinate& Upper, const InkOrdinate& Lower)
-+{
-+    if (!Standing)
-+        return;
-+    ImDrawList* List = static_cast<ImDrawList*>(Recording);
-+    List->AddRectFilledMultiColor(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
-+                                  ImVec2(Extent.MostAlong, Extent.MostAcross),
-+                                  ImGui::GetColorU32(InkToVec4(Upper)), ImGui::GetColorU32(InkToVec4(Upper)),
-+                                  ImGui::GetColorU32(InkToVec4(Lower)), ImGui::GetColorU32(InkToVec4(Lower)));
-+}
-+
-+void RecordingSurface::ScrimAlong(const PlaneExtent& Extent, const InkOrdinate& Leading, const InkOrdinate& Trailing)
-+{
-+    if (!Standing)
-+        return;
-+    ImDrawList* List = static_cast<ImDrawList*>(Recording);
-+    List->AddRectFilledMultiColor(ImVec2(Extent.LeastAlong, Extent.LeastAcross),
-+                                  ImVec2(Extent.MostAlong, Extent.MostAcross),
-+                                  ImGui::GetColorU32(InkToVec4(Leading)), ImGui::GetColorU32(InkToVec4(Trailing)),
-+                                  ImGui::GetColorU32(InkToVec4(Trailing)), ImGui::GetColorU32(InkToVec4(Leading)));
-+}
-+
-+void RecordingSurface::Medallion(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    if (!Standing)
-+        return;
-+    static_cast<ImDrawList*>(Recording)->AddCircleFilled(ImVec2(CentreAlong, CentreAcross), Radius,
-+                                                          ImGui::GetColorU32(InkToVec4(Ink)), 24);
-+}
-+
-+void RecordingSurface::Picture(const PlaneExtent& Extent, void* VendorIdentity, const InkOrdinate& Tint, float Radius, CornerSelection Corners)
-+{
-+    if (!Standing || VendorIdentity == nullptr)
-+        return;
-+    const ImTextureRef TexRef(static_cast<ImTextureID>(reinterpret_cast<std::uintptr_t>(VendorIdentity)));
-+    static_cast<ImDrawList*>(Recording)->AddImageRounded(TexRef,
-+                                                         ImVec2(Extent.LeastAlong, Extent.LeastAcross),
-+                                                         ImVec2(Extent.MostAlong, Extent.MostAcross),
-+                                                         ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
-+                                                         ImGui::GetColorU32(InkToVec4(Tint)), Radius, CornerFlags(Corners));
-+}
-+
-+void RecordingSurface::Ring(float CentreAlong, float CentreAcross, float Radius, float Thickness, const InkOrdinate& Ink)
-+{
-+    if (!Standing)
-+        return;
-+    static_cast<ImDrawList*>(Recording)->AddCircle(ImVec2(CentreAlong, CentreAcross), Radius,
-+                                                    ImGui::GetColorU32(InkToVec4(Ink)), 24, Thickness);
-+}
-+
-+void RecordingSurface::Stroke(float AlongA, float AcrossA, float AlongB, float AcrossB, float Thickness, const InkOrdinate& Ink)
-+{
-+    if (!Standing)
-+        return;
-+    static_cast<ImDrawList*>(Recording)->AddLine(ImVec2(AlongA, AcrossA), ImVec2(AlongB, AcrossB),
-+                                                  ImGui::GetColorU32(InkToVec4(Ink)), Thickness);
-+}
-+
-+void RecordingSurface::Rule(float Along, float Across, float ExtentAlong, float Thickness, const InkOrdinate& Ink)
-+{
-+    Stroke(Along, Across, Along + ExtentAlong, Across, Thickness, Ink);
-+}
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                       TEXT RUNS
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+namespace
-+{
-+
-+/// 🧩 The vendored typeface whose crisp size lies nearest the requested presentation size.
-+/// cost  ✔️
-+ImFont* TypefaceFor(float Size)
-+{
-+    ImGuiIO&      VendorIO = ImGui::GetIO();
-+    ImFont*       Nearest  = VendorIO.Fonts->Fonts[0];
-+    float         NearestGap = 1.0e9f;
-+    for (ImFont* Standing : VendorIO.Fonts->Fonts)
-+    {
-+        const float Gap = (Size > Standing->LegacySize) ? Size - Standing->LegacySize : Standing->LegacySize - Size;
-+        if (Gap < NearestGap)
-+        {
-+            Nearest     = Standing;
-+            NearestGap  = Gap;
-+        }
-+    }
-+    return Nearest;
-+}
-+
-+}   // namespace
-+
-+void RecordingSurface::TextRun(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size)
-+{
-+    if (!Standing || Run == nullptr || Run[0] == '\0')
-+        return;
-+
-+    ImDrawList* List        = static_cast<ImDrawList*>(Recording);
-+    ImFont*     Face        = TypefaceFor(Size);
-+    const float PresentedSize = Face->LegacySize;   // 📝 the nearest baked size — lazy bakes never trigger
-+    const ImU32 Packed      = ImGui::GetColorU32(InkToVec4(Ink));
-+    float       Cursor      = Along;
-+
-+    std::int32_t Scan = 0;
-+    while (Run[Scan] != '\0')
-+    {
-+        const std::int32_t SegmentStart = Scan;
-+        std::uint32_t      Codepoint    = 0;
-+        float              Advance      = 0.0f;
-+        while (Run[Scan] != '\0')
-+        {
-+            std::int32_t Probe = Scan;
-+            Codepoint = DecodeCodepoint(Run, Probe);
-+            if (DrawnStandIn(Codepoint, Advance))
-+                break;
-+            Scan = Probe;
-+        }
-+
-+        if (Scan > SegmentStart)
-+        {
-+            const std::int32_t Count = Scan - SegmentStart;
-+            List->AddText(Face, PresentedSize, ImVec2(Cursor, Across), Packed, Run + SegmentStart, Run + SegmentStart + Count);
-+            Cursor += Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, Run + SegmentStart, Run + SegmentStart + Count).x;
-+        }
-+
-+        if (Run[Scan] == '\0')
-+            break;
-+
-+        // ① The drawn stand-ins — middle dot, degree ring, em dash rule.
-+        const float Baseline = Across + PresentedSize * 0.78f;
-+        if (Codepoint == 0x00B7u)
-+            Medallion(Cursor + Advance * 0.5f, Baseline - PresentedSize * 0.30f, 1.1f, Ink);
-+        else if (Codepoint == 0x00B0u)
-+            Ring(Cursor + Advance * 0.5f, Baseline - PresentedSize * 0.62f, 1.4f, 1.0f, Ink);
-+        else if (Codepoint == 0x2014u)
-+            Rule(Cursor, Baseline - 1.0f, Advance, 1.0f, Ink);
-+        Cursor += Advance;
-+
-+        Scan += (Codepoint >= 0x0800u) ? 3 : ((Codepoint >= 0x0080u) ? 2 : 1);
-+    }
-+}
-+
-+void RecordingSurface::TextRunClipped(float Along, float Across, const char* Run, const InkOrdinate& Ink, float Size, float ExtentAlong)
-+{
-+    if (!Standing || Run == nullptr)
-+        return;
-+
-+    // ① Measure with stand-ins already folded in, then retreat whole stand-in boundaries until it fits.
-+    float Measured = MeasureRun(Run, Size);
-+    if (Measured <= ExtentAlong)
-+    {
-+        TextRun(Along, Across, Run, Ink, Size);
-+        return;
-+    }
-+
-+    ImFont* Face = TypefaceFor(Size);
-+    const float PresentedSize = Face->LegacySize;
-+    char    Trimmed[256];
-+    std::int32_t Count = 0;
-+    while (Run[Count] != '\0' && Count < 255)
-+    {
-+        Trimmed[Count] = Run[Count];
-+        ++Count;
-+    }
-+    Trimmed[Count] = '\0';
-+
-+    const float EllipsisExtent = Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, "...").x;
-+    while (Count > 0 && MeasureRun(Trimmed, Size) + EllipsisExtent > ExtentAlong)
-+    {
-+        // ② Retreat past a whole UTF-8 codepoint each step.
-+        --Count;
-+        while (Count > 0 && (static_cast<std::uint8_t>(Trimmed[Count]) & 0xC0u) == 0x80u)
-+            --Count;
-+        Trimmed[Count] = '\0';
-+    }
-+
-+    TextRun(Along, Across, Trimmed, Ink, Size);
-+    TextRun(Along + MeasureRun(Trimmed, Size), Across, "...", Ink, Size);
-+}
-+
-+float RecordingSurface::MeasureRun(const char* Run, float Size) const
-+{
-+    if (Run == nullptr)
-+        return 0.0f;
-+
-+    ImFont* Face        = TypefaceFor(Size);
-+    const float PresentedSize = Face->LegacySize;
-+    float   Extent      = 0.0f;
-+    std::int32_t Scan = 0;
-+    while (Run[Scan] != '\0')
-+    {
-+        const std::int32_t SegmentStart = Scan;
-+        std::uint32_t      Codepoint    = 0;
-+        float              Advance      = 0.0f;
-+        while (Run[Scan] != '\0')
-+        {
-+            std::int32_t Probe = Scan;
-+            Codepoint = DecodeCodepoint(Run, Probe);
-+            if (DrawnStandIn(Codepoint, Advance))
-+                break;
-+            Scan = Probe;
-+        }
-+
-+        if (Scan > SegmentStart)
-+            Extent += Face->CalcTextSizeA(PresentedSize, 1.0e9f, 0.0f, Run + SegmentStart, Run + SegmentStart + (Scan - SegmentStart)).x;
-+
-+        if (Run[Scan] == '\0')
-+            break;
-+
-+        Extent += Advance;
-+        Scan += (Codepoint >= 0x0800u) ? 3 : ((Codepoint >= 0x0080u) ? 2 : 1);
-+    }
-+    return Extent;
-+}
-+
-+float RecordingSurface::RunExtent(float Size) const
-+{
-+    return TypefaceFor(Size)->LegacySize;
-+}
-+
-+float RecordingSurface::CentredAlong(const PlaneExtent& Extent, const char* Run, float Size) const
-+{
-+    return Extent.LeastAlong + (Extent.SpanAlong() - MeasureRun(Run, Size)) * 0.5f;
-+}
-+
-+//------------------------------------------------------------------------------------------------------------------------
-+//                                                    AFFORDANCE GLYPHS
-+//------------------------------------------------------------------------------------------------------------------------
-+
-+void RecordingSurface::Chevron(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Down)
-+{
-+    // ① Down — the two strokes meet at the lower ordinate; right — they meet at the trailing ordinate.
-+    if (Down)
-+    {
-+        Stroke(CentreAlong - Radius, CentreAcross - Radius * 0.55f, CentreAlong, CentreAcross + Radius * 0.55f, 1.7f, Ink);
-+        Stroke(CentreAlong,          CentreAcross + Radius * 0.55f, CentreAlong + Radius, CentreAcross - Radius * 0.55f, 1.7f, Ink);
-+    }
-+    else
-+    {
-+        Stroke(CentreAlong - Radius * 0.55f, CentreAcross - Radius, CentreAlong + Radius * 0.55f, CentreAcross, 1.7f, Ink);
-+        Stroke(CentreAlong + Radius * 0.55f, CentreAcross,          CentreAlong - Radius * 0.55f, CentreAcross + Radius, 1.7f, Ink);
-+    }
-+}
-+
-+void RecordingSurface::EyeGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink, bool Absent)
-+{
-+    if (!Standing)
-+        return;
-+    ImDrawList* List   = static_cast<ImDrawList*>(Recording);
-+    const ImU32 Packed = ImGui::GetColorU32(InkToVec4(Ink));
-+
-+    const float Squash = 0.70f;
-+    const float LeadingEdge   = _pi * 1.05f;
-+    const float TrailingEdge  = _pi * 1.95f;
-+
-+    if (Absent)
-+    {
-+        // ① One lowered lid plus the strike.
-+        List->PathClear();
-+        for (int Ordinal = 0; Ordinal <= 10; ++Ordinal)
-+        {
-+            const float θ = LeadingEdge + (TrailingEdge - LeadingEdge) * Ordinal / 10.0f;
-+            List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash + Radius * 0.18f));
-+        }
-+        List->PathStroke(Packed, 0, 1.4f);
-+        Stroke(CentreAlong - Radius * 0.75f, CentreAcross - Radius * 0.35f, CentreAlong + Radius * 0.75f, CentreAcross + Radius * 0.60f, 1.4f, Ink);
-+        return;
-+    }
-+
-+    // ① Upper lid.
-+    List->PathClear();
-+    for (int Ordinal = 0; Ordinal <= 12; ++Ordinal)
-+    {
-+        const float θ = _pi * 1.02f + _pi * 0.96f * Ordinal / 12.0f;
-+        List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash));
-+    }
-+    List->PathStroke(Packed, 0, 1.4f);
-+    // ② Lower lid.
-+    List->PathClear();
-+    for (int Ordinal = 0; Ordinal <= 12; ++Ordinal)
-+    {
-+        const float θ = _pi * 0.98f - _pi * 0.96f * Ordinal / 12.0f;
-+        List->PathLineTo(ImVec2(CentreAlong + std::cos(θ) * Radius, CentreAcross + std::sin(θ) * Radius * Squash));
-+    }
-+    List->PathStroke(Packed, 0, 1.4f);
-+    // ③ Pupil.
-+    Medallion(CentreAlong, CentreAcross + Radius * 0.04f, Radius * 0.26f, Ink);
-+}
-+
-+void RecordingSurface::SearchGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    Ring(CentreAlong - Radius * 0.18f, CentreAcross - Radius * 0.18f, Radius * 0.62f, 1.5f, Ink);
-+    Stroke(CentreAlong + Radius * 0.34f, CentreAcross + Radius * 0.34f,
-+           CentreAlong + Radius * 0.78f, CentreAcross + Radius * 0.78f, 1.5f, Ink);
-+}
-+
-+void RecordingSurface::PlusGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    Stroke(CentreAlong - Radius, CentreAcross, CentreAlong + Radius, CentreAcross, 1.5f, Ink);
-+    Stroke(CentreAlong, CentreAcross - Radius, CentreAlong, CentreAcross + Radius, 1.5f, Ink);
-+}
-+
-+void RecordingSurface::CrossGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    Stroke(CentreAlong - Radius, CentreAcross - Radius, CentreAlong + Radius, CentreAcross + Radius, 1.5f, Ink);
-+    Stroke(CentreAlong + Radius, CentreAcross - Radius, CentreAlong - Radius, CentreAcross + Radius, 1.5f, Ink);
-+}
-+
-+void RecordingSurface::CheckGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    Stroke(CentreAlong - Radius, CentreAcross, CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.6f, Ink);
-+    Stroke(CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, CentreAlong + Radius, CentreAcross - Radius * 0.6f, 1.6f, Ink);
-+}
-+
-+void RecordingSurface::TrashGlyph(float CentreAlong, float CentreAcross, float Radius, const InkOrdinate& Ink)
-+{
-+    const PlaneExtent Bin = Spanning(CentreAlong - Radius * 0.75f, CentreAcross - Radius * 0.45f, Radius * 1.5f, Radius * 1.35f);
-+    Edge(Bin, Ink, 1.3f, 1.5f, CornerSelection::Lower);
-+    Stroke(CentreAlong - Radius, CentreAcross - Radius * 0.55f, CentreAlong + Radius, CentreAcross - Radius * 0.55f, 1.3f, Ink);
-+    Stroke(CentreAlong - Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong - Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
-+    Stroke(CentreAlong + Radius * 0.25f, CentreAcross - Radius * 0.05f, CentreAlong + Radius * 0.25f, CentreAcross + Radius * 0.75f, 1.2f, Ink);
-+}
-+
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h b/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h
 new file mode 100644
-index 0000000..e00d268
+index 0000000..2e8b5a6
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h
 @@ -0,0 +1,203 @@
@@ -4663,7 +4663,7 @@ index 0000000..e00d268
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -4856,10 +4856,10 @@ index 0000000..e00d268
 +    static constexpr std::uint32_t RightSwatch  = 0x3B82F6u;   // [-] - Right Plane
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h b/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h
 new file mode 100644
-index 0000000..b0417e2
+index 0000000..0539bcb
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h
 @@ -0,0 +1,215 @@
@@ -4870,14 +4870,14 @@ index 0000000..b0417e2
 +
 +#pragma once
 +
-+#include "Contract/Api/DeliveryContract.h"
++#include "Contract/Api/PanelContract.h"
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -4982,7 +4982,7 @@ index 0000000..b0417e2
 +
 +    /// 🧩 Presents the stack inside the seat extent, one tick.
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
 +                 const IconDepot& Depot);
 +
 +    char           RetentionRun[48] = "";   // [-] - the live filter run
@@ -5038,7 +5038,7 @@ index 0000000..b0417e2
 +
 +    /// 🧩 Presents the seat inside the extent, one tick.
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot);
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot);
 +
 +private:
 +
@@ -5074,13 +5074,13 @@ index 0000000..b0417e2
 +
 +    /// 🧩 Presents the seat inside the extent, one tick.
 +    /// tag   api, nonallocating, nonthrowing
-+    void Advance(RecordingSurface& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot);
++    void Advance(PanelExchange& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot);
 +};
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 new file mode 100644
-index 0000000..9260022
+index 0000000..99ece39
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 @@ -0,0 +1,1197 @@
@@ -5099,7 +5099,7 @@ index 0000000..9260022
 +#include <cstdio>
 +#include <cstring>
 +
-+namespace Slate
++namespace Rift
 +{
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -5179,7 +5179,7 @@ index 0000000..9260022
 +
 +/// 🧩 The channel sheet's slider — capsule of 92 px, centred numeral, 30 px unit segment, 19 px track.
 +/// tag   internal
-+void PresentChannelSlider(RecordingSurface& Surface, const PlaneExtent& Row, double& Amount, double Minimum, double Maximum,
++void PresentChannelSlider(PanelExchange& Surface, const PlaneExtent& Row, double& Amount, double Minimum, double Maximum,
 +                          std::uint32_t Figures, const char* Unit, const char* PushIdentity)
 +{
 +    ChannelInk Sheet;
@@ -5242,7 +5242,7 @@ index 0000000..9260022
 +
 +/// 🧩 The channel sheet's segment row — a 999-radius pill, the taken segment inverted.
 +/// tag   internal
-+void PresentChannelSegments(RecordingSurface& Surface, const PlaneExtent& Seat, const char* const* Captions, std::uint32_t Count,
++void PresentChannelSegments(PanelExchange& Surface, const PlaneExtent& Seat, const char* const* Captions, std::uint32_t Count,
 +                            std::uint32_t& Taken, const char* PushIdentity)
 +{
 +    ChannelInk Sheet;
@@ -5289,7 +5289,7 @@ index 0000000..9260022
 +
 +/// 🧩 The pickbar — a pill head opening a styled option list, for generators and transfer captions.
 +/// tag   internal
-+void PresentPickbar(RecordingSurface& Surface, const PlaneExtent& Seat, const char* CurrentRun, const char* PushIdentity)
++void PresentPickbar(PanelExchange& Surface, const PlaneExtent& Seat, const char* CurrentRun, const char* PushIdentity)
 +{
 +    ChannelInk Sheet;
 +    bool Roused = false;
@@ -5309,7 +5309,7 @@ index 0000000..9260022
 +
 +/// 🧩 The 8 px checkerboard a texture thumb seats.
 +/// tag   internal
-+void PresentCheckerTile(RecordingSurface& Surface, const PlaneExtent& Seat)
++void PresentCheckerTile(PanelExchange& Surface, const PlaneExtent& Seat)
 +{
 +    ChannelInk Sheet;
 +    const InkOrdinate Dark = Covering(0x0A0A0Au);
@@ -5396,7 +5396,7 @@ index 0000000..9260022
 +//                                                      THE LAYER STACK
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void LayerStackPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
++void LayerStackPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, LayerOrdinates* Layers, std::uint32_t LayerCount,
 +                              const IconDepot& Depot)
 +{
 +    ChannelInk Sheet;
@@ -5858,7 +5858,7 @@ index 0000000..9260022
 +//                                                  THE CHANNEL PROPERTY SEAT
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void ChannelPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot)
++void ChannelPropertyPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, ChannelOrdinates& Ordinates, const IconDepot& Depot)
 +{
 +    ChannelInk Sheet;
 +    Surface.Ground(Seat, Sheet.DeskGround, 0.0f);
@@ -6157,7 +6157,7 @@ index 0000000..9260022
 +//                                                   THE MASK PROPERTY SEAT
 +//------------------------------------------------------------------------------------------------------------------------
 +
-+void MaskPropertyPanel::Advance(RecordingSurface& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot)
++void MaskPropertyPanel::Advance(PanelExchange& Surface, const PlaneExtent& Seat, MaskOrdinates& Ordinates, const IconDepot& Depot)
 +{
 +    ChannelInk Sheet;
 +    Surface.Ground(Seat, Sheet.StandingGround, 0.0f);
@@ -6280,10 +6280,10 @@ index 0000000..9260022
 +    Surface.TextRun(DeleteSeat.LeastAlong + 26.0f, CentredAcross(DeleteSeat, Surface.RunExtent(10.0f)), "Delete", Sheet.Danger, 10.0f);
 +}
 +
-+}   // namespace Slate
++}   // namespace Rift
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..857e466
+index 0000000..56a7f37
 --- /dev/null
 +++ b/Makefile
 @@ -0,0 +1,73 @@
@@ -6304,7 +6304,7 @@ index 0000000..857e466
 +    ExternalPackages/imgui/imgui_widgets.cpp
 +
 +ENGINE_SOURCES := \
-+    Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp \
++    Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp \
 +    Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp \
 +    Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp \
 +    Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp \
