@@ -27,10 +27,10 @@ index 9511271..84ea8c5 100644
      if ($LASTEXITCODE -ne 0)
 diff --git a/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
 new file mode 100644
-index 0000000..f8e2bbe
+index 0000000..27d39b4
 --- /dev/null
 +++ b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
-@@ -0,0 +1,243 @@
+@@ -0,0 +1,328 @@
 +//============================================================================================================================================
 +//                                                      OUTLINERWINDOWHOST.CPP
 +//============================================================================================================================================
@@ -44,6 +44,7 @@ index 0000000..f8e2bbe
 +#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 +#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 +#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 +#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
@@ -59,7 +60,7 @@ index 0000000..f8e2bbe
 +
 +using namespace Slate;
 +
-+constexpr std::uint32_t InitialWidth  = 420u;    // [px] - the directory column with its desk margin
++constexpr std::uint32_t InitialWidth  = 980u;    // [px] - the directory column with the inspector beside it
 +constexpr std::uint32_t InitialHeight = 780u;    // [px]
 +
 +constexpr const char* WindowTitle = "Slate \u2014 Directory (scene outliner)";
@@ -132,6 +133,65 @@ index 0000000..f8e2bbe
 +    return Arriving;
 +}
 +
++struct RevisionStand
++{
++    static constexpr std::uint32_t RevisionCapacity = 32u;   // [-]
++
++    bool Folds[RevisionCapacity] = {};
++    Slate::Reference::RevisionDeclaration Revisions[RevisionCapacity];
++    std::uint32_t Count = 0u;
++
++    void Assemble()
++    {
++        static const char* const CreatedRuns[11] = {
++            "Created Part", "Created Sketches", "Created SK_BasePlate", "Created SK_BoltHoles", "Created Bodies",
++            "Created BODY_Bracket", "Created SOL_Plate", "Created SOL_Boss", "Created SOL_Rib",
++            "Created SOL_Housing", "Created SOL_Dome"
++        };
++        static const char* const Tokens[11] = {
++            "r001", "r002", "r003", "r004", "r005", "r006", "r007", "r008", "r009", "r010", "r011"
++        };
++
++        std::uint32_t Seated = 0u;
++        for (std::uint32_t Ordinal = 0u; Ordinal < 11u && Seated + 2u < RevisionCapacity; ++Ordinal)
++        {
++            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Start,  CreatedRuns[Ordinal], "Initial state",
++                                    "", "System", "", "09:14", "2026-08-17", &Folds[Seated] };
++            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Create, "Added to scene", "Inserted at origin",
++                                    "", "System", "", "09:19", "2026-08-17", &Folds[Seated] };
++        }
++
++        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Parameter, "Adjusted radius", "Radius 6.25 → 6.75",
++                                "Increased radius to match new constraints.", "Alex Chen", "6.75", "10:42", "2026-08-17",
++                                &Folds[Seated] };
++        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Feature, "Draft angle applied", "Draft angle 3°",
++                                "Customer requested smoother finish.", "Sam Rivera", "3.0", "11:05", "2026-08-17",
++                                &Folds[Seated] };
++        Revisions[Seated++] = { "r003", Slate::Reference::RevisionCategory::Sketch, "Profile constrained", "12 constraints",
++                                "Approximated spline from DXF import.", "Maria Rossi", "", "11:31", "2026-08-17",
++                                &Folds[Seated] };
++        Count = Seated;
++    }
++};
++
++/// 🧩 Finds the row carrying the identity, through the whole forest.
++const Slate::Reference::OutlinerRowDeclaration* FindRow(const ForestStand& Forest, const char* Identity)
++{
++    const Slate::Reference::OutlinerRowDeclaration* Stacks[5] = { Forest.Root, Forest.Enclosed, Forest.Bodies, Forest.Bracket, Forest.Sketches };
++    const std::uint32_t Counts[5] = { 1u, 2u, 3u, 3u, 2u };
++    for (std::uint32_t StackOrdinal = 0u; StackOrdinal < 5u; ++StackOrdinal)
++        for (std::uint32_t Ordinal = 0u; Ordinal < Counts[StackOrdinal]; ++Ordinal)
++        {
++            const Slate::Reference::OutlinerRowDeclaration& Row = Stacks[StackOrdinal][Ordinal];
++            if (std::strcmp(Row.Identity, Identity) == 0)
++                return &Row;
++            for (std::uint32_t Inner = 0u; Inner < Row.EnclosureCount; ++Inner)
++                if (std::strcmp(Row.Enclosed[Inner].Identity, Identity) == 0)
++                    return &Row.Enclosed[Inner];
++        }
++    return nullptr;
++}
++
 +}   // namespace
 +
 +//------------------------------------------------------------------------------------------------------------------------
@@ -178,9 +238,18 @@ index 0000000..f8e2bbe
 +    Depot.SeatVectorGlyph();
 +
 +    Slate::Reference::OutlinerPanel Directory;
++    Slate::Reference::PropertiesPanel Inspector;
++    Slate::Reference::ProfileOrdinates Profile;
++    RevisionStand Revisions;
++    Revisions.Assemble();
++    char InspectedIdentity[16] = "r007";
++    const Slate::Reference::OutlinerRowDeclaration* Inspected = nullptr;
 +    SeedStand Stand;
 +    ForestStand Forest;
 +    AssembleForest(Stand, Forest);
++    Inspected = FindRow(Forest, InspectedIdentity);
++    if (Inspected != nullptr)
++        Slate::Reference::SeatProfile(Profile, *Inspected);
 +    Directory.SeatTaken("r007");
 +
 +    // ④ The paced loop — Await acquires and opens, Surrender submits and presents.
@@ -235,12 +304,28 @@ index 0000000..f8e2bbe
 +                Slate::Reference::WorkspaceInk Sheet;
 +                PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
 +                                   Sheet.DeskGround, 0.0f);
-+                const float Margin = (Display.ExtentAlong - DirectoryAlong) * 0.5f;
++                // ①① The live seat: the directory left, the record inspector right. Selection drives the
++                //     inspector every tick; a double press raises it the same way Tab does in the reference.
 +                Directory.Advance(PanelRecordSurface,
-+                                  Slate::Reference::PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, Display.ExtentAcross - 40.0f },
++                                  Slate::Reference::PlaneExtent{ 20.0f, 20.0f, 20.0f + DirectoryAlong, Display.ExtentAcross - 40.0f },
 +                                  Forest.Root, 1u, Slate::Reference::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
++
++                if (Directory.TakenCount > 0u &&
++                    std::strcmp(Directory.TakenIdentities[0], InspectedIdentity) != 0)
++                {
++                    std::snprintf(InspectedIdentity, sizeof InspectedIdentity, "%s", Directory.TakenIdentities[0]);
++                    Inspected = FindRow(Forest, InspectedIdentity);
++                    if (Inspected != nullptr)
++                        Slate::Reference::SeatProfile(Profile, *Inspected);
++                }
 +                if (Directory.InspectRaised)
-+                    Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
++                    Directory.InspectRaised = false;   // 📝 the inspector already stands beside; the raise is honoured
++
++                if (Inspected != nullptr)
++                    Inspector.Advance(PanelRecordSurface,
++                                      Slate::Reference::PlaneExtent{ 20.0f + DirectoryAlong + 20.0f, 20.0f,
++                                                                    Display.ExtentAlong - 40.0f, Display.ExtentAcross - 40.0f },
++                                      Inspected, Profile, Depot, Revisions.Revisions, Revisions.Count, Forest.Root, 1u);
 +                Slate::Reference::InterfaceSequence::CloseSeatWindow();
 +                PanelRecordSurface.Seal();
 +            }
@@ -808,6 +893,21 @@ index 0000000..f35d0e5
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/DraftingPanel/Module.toml b/Engine/SlateUI/Interface/DraftingPanel/Module.toml
+new file mode 100644
+index 0000000..355d7c5
+--- /dev/null
++++ b/Engine/SlateUI/Interface/DraftingPanel/Module.toml
+@@ -0,0 +1,9 @@
++# DraftingPanel — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "DraftingPanel"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The CAD drafting composition — directory, Properties & Actions bar, metadata pane; from page.tsx's drafting seat.
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 new file mode 100644
 index 0000000..179de78
@@ -1846,6 +1946,21 @@ index 0000000..80b1f01
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/IconDepot/Module.toml b/Engine/SlateUI/Interface/IconDepot/Module.toml
+new file mode 100644
+index 0000000..a7ddc09
+--- /dev/null
++++ b/Engine/SlateUI/Interface/IconDepot/Module.toml
+@@ -0,0 +1,9 @@
++# IconDepot — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "IconDepot"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The single dummy glyph every classification icon seat presents, rasterised once and tinted.
 diff --git a/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 new file mode 100644
 index 0000000..01b14ee
@@ -2106,6 +2221,22 @@ index 0000000..cfb9993
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Module.toml b/Engine/SlateUI/Interface/InterfaceSequence/Module.toml
+new file mode 100644
+index 0000000..2cd4302
+--- /dev/null
++++ b/Engine/SlateUI/Interface/InterfaceSequence/Module.toml
+@@ -0,0 +1,10 @@
++# InterfaceSequence — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "InterfaceSequence"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The headless interface tick — adoption, pointer seating, open, seal. The Api names no vendored
++#    spelling, so hosts stay on the clean side of the partition.
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
 index 0000000..28c7cd5
@@ -2396,6 +2527,21 @@ index 0000000..cc025c7
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Module.toml b/Engine/SlateUI/Interface/OutlinerPanel/Module.toml
+new file mode 100644
+index 0000000..f8b5ef7
+--- /dev/null
++++ b/Engine/SlateUI/Interface/OutlinerPanel/Module.toml
+@@ -0,0 +1,9 @@
++# OutlinerPanel — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "OutlinerPanel"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The general-purpose world outliner and entry inspector, transcribed from GameOutliner.tsx.
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 new file mode 100644
 index 0000000..4359bea
@@ -3004,6 +3150,21 @@ index 0000000..f8546a0
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/PanelExchange/Module.toml b/Engine/SlateUI/Interface/PanelExchange/Module.toml
+new file mode 100644
+index 0000000..682c806
+--- /dev/null
++++ b/Engine/SlateUI/Interface/PanelExchange/Module.toml
+@@ -0,0 +1,9 @@
++# RecordingSurface — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "RecordingSurface"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 Primitives in, recorded commands out — the standalone drawing seam over the vendored interface library.
 diff --git a/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp b/Engine/SlateUI/Interface/PanelExchange/Source/PanelExchange.cpp
 new file mode 100644
 index 0000000..44cd4db
@@ -3646,6 +3807,21 @@ index 0000000..1cea956
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Module.toml b/Engine/SlateUI/Interface/PropertiesPanel/Module.toml
+new file mode 100644
+index 0000000..6c69d92
+--- /dev/null
++++ b/Engine/SlateUI/Interface/PropertiesPanel/Module.toml
+@@ -0,0 +1,9 @@
++# PropertiesPanel — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "PropertiesPanel"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The record inspector with the Properties / History carousel, transcribed from Inspector.tsx.
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 new file mode 100644
 index 0000000..5e439ad
@@ -4437,6 +4613,21 @@ index 0000000..f99c276
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/RasterCodec/Module.toml b/Engine/SlateUI/Interface/RasterCodec/Module.toml
+new file mode 100644
+index 0000000..b596463
+--- /dev/null
++++ b/Engine/SlateUI/Interface/RasterCodec/Module.toml
+@@ -0,0 +1,9 @@
++# RasterCodec — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "RasterCodec"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 Software raster translation of recorded draw data into display pixels — no window, no GPU.
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 new file mode 100644
 index 0000000..30440d2
@@ -5255,6 +5446,21 @@ index 0000000..ce8ad1d
 +
 +}   // namespace Reference
 +}   // namespace Slate
+diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml b/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml
+new file mode 100644
+index 0000000..b269977
+--- /dev/null
++++ b/Engine/SlateUI/Interface/TexturePaintPanel/Module.toml
+@@ -0,0 +1,9 @@
++# TexturePaintPanel — a SlateUI interface unit.
++# Declarative map only; the standalone build is the Makefile at the repository root.
++
++[unit]
++name    = "TexturePaintPanel"
++product = "StaticLibrary"
++subject = [ "Interface" ]
++
++# 📝 The layer stack, channel property seat and mask property seat, transcribed from TexturePaint.tsx.
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 new file mode 100644
 index 0000000..78cafde

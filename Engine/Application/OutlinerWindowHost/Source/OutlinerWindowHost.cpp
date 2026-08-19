@@ -11,6 +11,7 @@
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 #include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
 #include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
@@ -26,7 +27,7 @@ namespace
 
 using namespace Slate;
 
-constexpr std::uint32_t InitialWidth  = 420u;    // [px] - the directory column with its desk margin
+constexpr std::uint32_t InitialWidth  = 980u;    // [px] - the directory column with the inspector beside it
 constexpr std::uint32_t InitialHeight = 780u;    // [px]
 
 constexpr const char* WindowTitle = "Slate \u2014 Directory (scene outliner)";
@@ -99,6 +100,65 @@ InterfaceAttachment Attach(const DeviceOffering& Offered)
     return Arriving;
 }
 
+struct RevisionStand
+{
+    static constexpr std::uint32_t RevisionCapacity = 32u;   // [-]
+
+    bool Folds[RevisionCapacity] = {};
+    Slate::Reference::RevisionDeclaration Revisions[RevisionCapacity];
+    std::uint32_t Count = 0u;
+
+    void Assemble()
+    {
+        static const char* const CreatedRuns[11] = {
+            "Created Part", "Created Sketches", "Created SK_BasePlate", "Created SK_BoltHoles", "Created Bodies",
+            "Created BODY_Bracket", "Created SOL_Plate", "Created SOL_Boss", "Created SOL_Rib",
+            "Created SOL_Housing", "Created SOL_Dome"
+        };
+        static const char* const Tokens[11] = {
+            "r001", "r002", "r003", "r004", "r005", "r006", "r007", "r008", "r009", "r010", "r011"
+        };
+
+        std::uint32_t Seated = 0u;
+        for (std::uint32_t Ordinal = 0u; Ordinal < 11u && Seated + 2u < RevisionCapacity; ++Ordinal)
+        {
+            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Start,  CreatedRuns[Ordinal], "Initial state",
+                                    "", "System", "", "09:14", "2026-08-17", &Folds[Seated] };
+            Revisions[Seated++] = { Tokens[Ordinal], Slate::Reference::RevisionCategory::Create, "Added to scene", "Inserted at origin",
+                                    "", "System", "", "09:19", "2026-08-17", &Folds[Seated] };
+        }
+
+        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Parameter, "Adjusted radius", "Radius 6.25 → 6.75",
+                                "Increased radius to match new constraints.", "Alex Chen", "6.75", "10:42", "2026-08-17",
+                                &Folds[Seated] };
+        Revisions[Seated++] = { "r008", Slate::Reference::RevisionCategory::Feature, "Draft angle applied", "Draft angle 3°",
+                                "Customer requested smoother finish.", "Sam Rivera", "3.0", "11:05", "2026-08-17",
+                                &Folds[Seated] };
+        Revisions[Seated++] = { "r003", Slate::Reference::RevisionCategory::Sketch, "Profile constrained", "12 constraints",
+                                "Approximated spline from DXF import.", "Maria Rossi", "", "11:31", "2026-08-17",
+                                &Folds[Seated] };
+        Count = Seated;
+    }
+};
+
+/// 🧩 Finds the row carrying the identity, through the whole forest.
+const Slate::Reference::OutlinerRowDeclaration* FindRow(const ForestStand& Forest, const char* Identity)
+{
+    const Slate::Reference::OutlinerRowDeclaration* Stacks[5] = { Forest.Root, Forest.Enclosed, Forest.Bodies, Forest.Bracket, Forest.Sketches };
+    const std::uint32_t Counts[5] = { 1u, 2u, 3u, 3u, 2u };
+    for (std::uint32_t StackOrdinal = 0u; StackOrdinal < 5u; ++StackOrdinal)
+        for (std::uint32_t Ordinal = 0u; Ordinal < Counts[StackOrdinal]; ++Ordinal)
+        {
+            const Slate::Reference::OutlinerRowDeclaration& Row = Stacks[StackOrdinal][Ordinal];
+            if (std::strcmp(Row.Identity, Identity) == 0)
+                return &Row;
+            for (std::uint32_t Inner = 0u; Inner < Row.EnclosureCount; ++Inner)
+                if (std::strcmp(Row.Enclosed[Inner].Identity, Identity) == 0)
+                    return &Row.Enclosed[Inner];
+        }
+    return nullptr;
+}
+
 }   // namespace
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -145,9 +205,18 @@ int main()
     Depot.SeatVectorGlyph();
 
     Slate::Reference::OutlinerPanel Directory;
+    Slate::Reference::PropertiesPanel Inspector;
+    Slate::Reference::ProfileOrdinates Profile;
+    RevisionStand Revisions;
+    Revisions.Assemble();
+    char InspectedIdentity[16] = "r007";
+    const Slate::Reference::OutlinerRowDeclaration* Inspected = nullptr;
     SeedStand Stand;
     ForestStand Forest;
     AssembleForest(Stand, Forest);
+    Inspected = FindRow(Forest, InspectedIdentity);
+    if (Inspected != nullptr)
+        Slate::Reference::SeatProfile(Profile, *Inspected);
     Directory.SeatTaken("r007");
 
     // ④ The paced loop — Await acquires and opens, Surrender submits and presents.
@@ -202,12 +271,28 @@ int main()
                 Slate::Reference::WorkspaceInk Sheet;
                 PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
                                    Sheet.DeskGround, 0.0f);
-                const float Margin = (Display.ExtentAlong - DirectoryAlong) * 0.5f;
+                // ①① The live seat: the directory left, the record inspector right. Selection drives the
+                //     inspector every tick; a double press raises it the same way Tab does in the reference.
                 Directory.Advance(PanelRecordSurface,
-                                  Slate::Reference::PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, Display.ExtentAcross - 40.0f },
+                                  Slate::Reference::PlaneExtent{ 20.0f, 20.0f, 20.0f + DirectoryAlong, Display.ExtentAcross - 40.0f },
                                   Forest.Root, 1u, Slate::Reference::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
+
+                if (Directory.TakenCount > 0u &&
+                    std::strcmp(Directory.TakenIdentities[0], InspectedIdentity) != 0)
+                {
+                    std::snprintf(InspectedIdentity, sizeof InspectedIdentity, "%s", Directory.TakenIdentities[0]);
+                    Inspected = FindRow(Forest, InspectedIdentity);
+                    if (Inspected != nullptr)
+                        Slate::Reference::SeatProfile(Profile, *Inspected);
+                }
                 if (Directory.InspectRaised)
-                    Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
+                    Directory.InspectRaised = false;   // 📝 the inspector already stands beside; the raise is honoured
+
+                if (Inspected != nullptr)
+                    Inspector.Advance(PanelRecordSurface,
+                                      Slate::Reference::PlaneExtent{ 20.0f + DirectoryAlong + 20.0f, 20.0f,
+                                                                    Display.ExtentAlong - 40.0f, Display.ExtentAcross - 40.0f },
+                                      Inspected, Profile, Depot, Revisions.Revisions, Revisions.Count, Forest.Root, 1u);
                 Slate::Reference::InterfaceSequence::CloseSeatWindow();
                 PanelRecordSurface.Seal();
             }
