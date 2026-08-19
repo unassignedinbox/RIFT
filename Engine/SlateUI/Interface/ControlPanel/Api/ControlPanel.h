@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-#include "Engine/SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 

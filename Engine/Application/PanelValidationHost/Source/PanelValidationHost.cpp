@@ -3,16 +3,16 @@
 //============================================================================================================================================
 // 🧩 Records the texture-paint panels and the CAD drafting panel for direct visual comparison against their references.
 
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
-#include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
-#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-#include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
-#include "Engine/SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
+#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
+#include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 #include <cstdio>

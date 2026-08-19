@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 The one translation unit that addresses the vendored interface library — every recorded primitive lands in its draw list.
 
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 
 #include "imgui.h"
 

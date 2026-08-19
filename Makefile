@@ -6,7 +6,7 @@
 
 CXX      ?= g++
 CXXFLAGS ?= -std=c++20 -O1 -g0 -Wall -Wno-unused-parameter -Wno-unused-variable
-INCLUDES := -I ExternalPackages/imgui -I .
+INCLUDES := -I ExternalPackages/imgui -I Engine -I .
 
 IMGUI_SOURCES := \
     ExternalPackages/imgui/imgui.cpp \

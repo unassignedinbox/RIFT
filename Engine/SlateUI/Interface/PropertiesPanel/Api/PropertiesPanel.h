@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "Engine/Contract/Api/DeliveryContract.h"
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-#include "Engine/SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
+#include "Contract/Api/DeliveryContract.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 

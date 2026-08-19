@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Engine/Contract/Api/DeliveryContract.h"
+#include "Contract/Api/DeliveryContract.h"
 
 #include <cstdint>
 #include <vector>

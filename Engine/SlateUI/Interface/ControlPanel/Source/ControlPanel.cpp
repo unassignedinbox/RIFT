@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 The reference control panel's widgets — capsules, switches, segments, dropdowns, sliders, vectors, colours, paths — presented on the recording seam.
 
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 
 #include "imgui.h"
 

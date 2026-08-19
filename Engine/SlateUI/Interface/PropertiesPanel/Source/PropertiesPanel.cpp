@@ -3,8 +3,8 @@
 //============================================================================================================================================
 // 🧩 Record cards through ControlPanel widgets, the carousel, and the revision stack — Inspector.tsx on the recording seam.
 
-#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 
 #include "imgui.h"
 

@@ -3,11 +3,11 @@
 //============================================================================================================================================
 // 🧩 The standalone scene directory — the CAD panel's outliner alone on the desk, no editor, no viewport, no lattice.
 
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
-#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 
 #include <cstdint>
 #include <cstdio>

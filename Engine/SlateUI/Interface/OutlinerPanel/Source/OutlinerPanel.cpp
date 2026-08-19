@@ -3,8 +3,8 @@
 //============================================================================================================================================
 // 🧩 The scene directory tree, presented row by row from borrowed declarations — head, filter, forest, count foot.
 
-#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 
 #include "imgui.h"
 

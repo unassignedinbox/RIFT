@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 The one place a headless host's vendored context is addressed — adoption, pointer, tick, dismissal.
 
-#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 
 #include "imgui.h"
 

@@ -3,8 +3,8 @@
 //============================================================================================================================================
 // 🧩 Layer stack, channel cards and mask section — the texture-paint reference transcribed onto the recording seam.
 
-#include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 
 #include "imgui.h"
 

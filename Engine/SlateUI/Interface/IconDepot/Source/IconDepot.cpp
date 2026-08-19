@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 Rasterises the dummy glyph's SVG geometry — rounded square, centred dot — into one tintable picture.
 
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 
 #include "imgui.h"
 

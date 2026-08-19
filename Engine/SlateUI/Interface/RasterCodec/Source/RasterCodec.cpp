@@ -3,7 +3,7 @@
 //============================================================================================================================================
 // 🧩 Scanline coverage, bilinear texture reads, straight-alpha source-over — the whole pipeline is arithmetic on the byte extent.
 
-#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
+#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
 
 #include "imgui.h"
 

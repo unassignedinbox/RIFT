@@ -3,8 +3,8 @@
 //============================================================================================================================================
 // 🧩 The drafting seat — directory on the left, the Properties & Actions bar and the metadata pane on the right.
 
-#include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
-#include "Engine/SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
+#include "SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
+#include "SlateUI/Interface/ControlPanel/Api/ControlPanel.h"
 
 #include "imgui.h"
 

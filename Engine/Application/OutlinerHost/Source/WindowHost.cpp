@@ -5,9 +5,9 @@
 // note  Built only where GLFW and an OpenGL development package stand (`make outliner-window`); the headless
 //       build never compiles this file, exactly as the sandbox build does not.
 
-#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
+#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
+#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
