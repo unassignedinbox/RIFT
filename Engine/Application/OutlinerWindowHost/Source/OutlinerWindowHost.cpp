@@ -135,7 +135,7 @@ int main()
     // ③ The Rift seat — the glyph drawn as primitives, the directory as the reference seats it.
     Rift::IconDepot Depot;
 
-    if (!Depot.Construct()().ContentPresent)
+    if (!Depot.Construct().ContentPresent())
     {
         std::printf("%s \u2014 the glyph depot was refused\n", HostName);
         return 1;
@@ -192,7 +192,7 @@ int main()
             const DisplayCondition& Display = Surface.Display();
 
             Rift::PanelExchange RiftSurface;
-            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath)().ContentPresent)
+            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath).ContentPresent())
             {
                 Rift::WorkspaceInk Sheet;
                 RiftSurface.Ground(Rift::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },

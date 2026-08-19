@@ -257,7 +257,7 @@ index 0000000..fe6e2fa
 +}
 diff --git a/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
 new file mode 100644
-index 0000000..0e88ede
+index 0000000..3aaa870
 --- /dev/null
 +++ b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
 @@ -0,0 +1,237 @@
@@ -398,7 +398,7 @@ index 0000000..0e88ede
 +    // ③ The Rift seat — the glyph drawn as primitives, the directory as the reference seats it.
 +    Rift::IconDepot Depot;
 +
-+    if (!Depot.Construct().ContentPresent)
++    if (!Depot.Construct()().ContentPresent)
 +    {
 +        std::printf("%s \u2014 the glyph depot was refused\n", HostName);
 +        return 1;
@@ -455,7 +455,7 @@ index 0000000..0e88ede
 +            const DisplayCondition& Display = Surface.Display();
 +
 +            Rift::PanelExchange RiftSurface;
-+            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath).ContentPresent)
++            if (RiftSurface.Adopt(Rift::PanelExchange::ShellLayer::Beneath)().ContentPresent)
 +            {
 +                Rift::WorkspaceInk Sheet;
 +                RiftSurface.Ground(Rift::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
