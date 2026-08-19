@@ -26,7 +26,7 @@ index 9511271..84ea8c5 100644
  
      if ($LASTEXITCODE -ne 0)
 diff --git a/Engine/Application/Module.toml b/Engine/Application/Module.toml
-index 971a260..44a5ba6 100644
+index 971a260..27a95db 100644
 --- a/Engine/Application/Module.toml
 +++ b/Engine/Application/Module.toml
 @@ -4,7 +4,7 @@
@@ -34,10 +34,17 @@ index 971a260..44a5ba6 100644
  name    = "Application"
  product = "Executable"
 -subject = [ "ConsoleHost", "PaintHost", "EditorHost", "InterfaceValidationHost" ]
-+subject = [ "ConsoleHost", "PaintHost", "EditorHost", "InterfaceValidationHost", "OutlinerHost", "PanelValidationHost" ]
++subject = [ "ConsoleHost", "PaintHost", "EditorHost", "InterfaceValidationHost", "OutlinerHost", "PanelValidationHost", "OutlinerWindowHost" ]
  
  # 📝 The host links every unit, so it is the one target where the whole DAG is realised at once. The link
  #    order below is the reverse of the dependency order, which is what the linker resolves against.
+@@ -27,5 +27,5 @@ declare = []
+ #    for `SlateUI`, which links four archives and is permitted to include none of them — a static archive
+ #    only satisfies references the linker has already seen, so the order is load-bearing.
+ unit    = [ "SlateUI", "SlateCompute", "SlateVulkan", "SlateDocument", "SlateMath" ]
+-library = [ "$VULKAN_SDK/Lib/vulkan-1.lib", "ExternalPackages/glfw/lib-vc2022/glfw3dll.lib", "gdi32.lib" ]
++library = [ "$VULKAN_SDK/Lib/vulkan-1.lib", "ExternalPackages/glfw/lib-vc2022/glfw3dll.lib", "gdi32.lib", "opengl32.lib" ]
+ carry   = [ "ExternalPackages/glfw/lib-vc2022/glfw3.dll" ]
 diff --git a/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
 new file mode 100644
 index 0000000..fe6e2fa
@@ -253,6 +260,130 @@ index 0000000..fe6e2fa
 +        std::printf("OutlinerHost: press enter to close\n");
 +        std::fgetc(stdin);
 +    }
++    return 0;
++}
+diff --git a/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
+new file mode 100644
+index 0000000..46cf561
+--- /dev/null
++++ b/Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp
+@@ -0,0 +1,118 @@
++//============================================================================================================================================
++//                                                      OUTLINERWINDOWHOST.CPP
++//============================================================================================================================================
++// 🧩 The interactive standalone directory — a real platform window; click rows, filter, ctrl-select, inspect.
++
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++
++#include <cstdint>
++#include <cstdio>
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                    THE SEED FOREST
++//------------------------------------------------------------------------------------------------------------------------
++
++namespace
++{
++
++using namespace Rift;
++
++constexpr float WindowAlong     = 400.0f;   // [px]
++constexpr float WindowAcross    = 760.0f;   // [px]
++constexpr float DirectoryAlong  = 350.0f;   // [px] - the reference's directory column
++
++struct SeedStand
++{
++    bool ExpandedRoot     = true;
++    bool ExpandedSketches = true;
++    bool ExpandedBodies   = true;
++    bool ExpandedBracket  = true;
++    bool HiddenSketches   = false;
++    bool HiddenBasePlate  = false;
++};
++
++struct ForestStand
++{
++    OutlinerRowDeclaration Root[1];
++    OutlinerRowDeclaration Sketches[2];
++    OutlinerRowDeclaration Bracket[3];
++    OutlinerRowDeclaration Bodies[3];
++    OutlinerRowDeclaration Enclosed[2];
++};
++
++void AssembleForest(SeedStand& Stand, ForestStand& Forest)
++{
++    Forest.Sketches[0] = { "SK_BasePlate", "r003", DirectoryClassification::Sketch,   nullptr, &Stand.HiddenBasePlate, nullptr, 0u };
++    Forest.Sketches[1] = { "SK_BoltHoles", "r004", DirectoryClassification::Sketch,   nullptr, nullptr, nullptr, 0u };
++
++    Forest.Bracket[0] = { "SOL_Plate",   "r007", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
++    Forest.Bracket[1] = { "SOL_Boss",    "r008", DirectoryClassification::Cylinder, nullptr, nullptr, nullptr, 0u };
++    Forest.Bracket[2] = { "SOL_Rib",     "r009", DirectoryClassification::Solid,    nullptr, nullptr, nullptr, 0u };
++
++    Forest.Bodies[0] = { "BODY_Bracket", "r006", DirectoryClassification::Enclosure, &Stand.ExpandedBracket, nullptr, Forest.Bracket, 3u };
++    Forest.Bodies[1] = { "SOL_Housing",  "r010", DirectoryClassification::Solid,     nullptr, nullptr, nullptr, 0u };
++    Forest.Bodies[2] = { "SOL_Dome",     "r011", DirectoryClassification::Sphere,    nullptr, nullptr, nullptr, 0u };
++
++    Forest.Enclosed[0] = { "Sketches", "r002", DirectoryClassification::Enclosure, &Stand.ExpandedSketches, &Stand.HiddenSketches, Forest.Sketches, 2u };
++    Forest.Enclosed[1] = { "Bodies",   "r005", DirectoryClassification::Enclosure, &Stand.ExpandedBodies,   nullptr,               Forest.Bodies,   3u };
++
++    Forest.Root[0] = { "Part", "r001", DirectoryClassification::Scene, &Stand.ExpandedRoot, nullptr, Forest.Enclosed, 2u };
++}
++
++}   // namespace
++
++//------------------------------------------------------------------------------------------------------------------------
++//                                                          ENTRY
++//------------------------------------------------------------------------------------------------------------------------
++
++int main()
++{
++    InterfaceSequence::SeatFaultReporter();
++
++    if (!InterfaceSequence::AdoptWindowed(WindowAlong, WindowAcross, "RIFT \u2014 Directory (scene outliner)").ContentPresent())
++    {
++        std::fprintf(stderr, "OutlinerWindowHost: the window refused to adopt\n");
++        return 1;
++    }
++
++    IconDepot Depot;
++    if (!Depot.Construct().ContentPresent())
++    {
++        std::fprintf(stderr, "OutlinerWindowHost: the glyph depot refused to construct\n");
++        return 1;
++    }
++    InterfaceSequence::SeatGlyphPicture(Depot);
++
++    OutlinerPanel Directory;
++    SeedStand Stand;
++    ForestStand Forest;
++    AssembleForest(Stand, Forest);
++    Directory.SeatTaken("r007");
++
++    while (InterfaceSequence::WindowStanding())
++    {
++        if (!InterfaceSequence::BeginWindowTick().ContentPresent())
++            break;
++
++        PanelExchange Surface;
++        if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
++        {
++            ThemeSpecification Sheet;
++            Surface.Ground(PlaneExtent{ 0.0f, 0.0f, WindowAlong, WindowAcross }, Sheet.DeskGround, 0.0f);
++            const float Margin = (WindowAlong - DirectoryAlong) * 0.5f;
++            Directory.Advance(Surface, PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, WindowAcross - 40.0f },
++                              Forest.Root, 1u, OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
++            if (Directory.InspectRaised)
++                Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
++            Surface.Seal();
++        }
++        InterfaceSequence::EndWindowTick();
++    }
++
++    InterfaceSequence::DismissWindowed();
 +    return 0;
 +}
 diff --git a/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
@@ -1960,10 +2091,10 @@ index 0000000..19ef219
 +}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 new file mode 100644
-index 0000000..bb50ed5
+index 0000000..a17bcf8
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,112 @@
 +//============================================================================================================================================
 +//                                                       INTERFACESEQUENCE.H
 +//============================================================================================================================================
@@ -1972,6 +2103,7 @@ index 0000000..bb50ed5
 +#pragma once
 +
 +#include "Contract/Api/PanelContract.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 +
 +#include <cstdint>
 +
@@ -2018,6 +2150,11 @@ index 0000000..bb50ed5
 +    /// tag   api, nonallocating, nonthrowing
 +    static void* SealTick();
 +
++    /// 🧩 The recorded draw data of the last sealed tick — the backends' present input.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static void* SealTickDrawData();
++
 +    /// 🧩 Dismisses the adopted context.
 +    /// cost  ✔️
 +    /// tag   api, nonallocating, nonthrowing
@@ -2033,15 +2170,49 @@ index 0000000..bb50ed5
 +    /// cost  ✔️
 +    /// tag   api, nonallocating, nonthrowing
 +    static void NameStage(const char* StageRun);
++
++    /// 🧩 Adopts the vendored context behind a real platform window — the interactive seat.
++    /// note  🔴 The window translation units live inside SlateUI, the one unit permitted the vendored
++    ///       window and interface backends; the host drives only these calls.
++    /// out   Deliver  [-]  refuses with CapabilityAbsent when the window refuses to open
++    /// cost  🚩
++    /// tag   api, nonthrowing
++    static Deliver<bool> AdoptWindowed(double DisplayAlong, double DisplayAcross, const char* TitleRun);
++
++    /// 🧩 Whether the window still stands open.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static bool WindowStanding();
++
++    /// 🧩 Begins one windowed tick — events polled, the frame opens, the host window stands.
++    /// out   Deliver  [-]  refuses when no window stands
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static Deliver<bool> BeginWindowTick();
++
++    /// 🧩 Ends the windowed tick — the frame seals, the backends present, the buffer swaps.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static void EndWindowTick();
++
++    /// 🧩 Uploads the glyph depot's raster once and adopts the platform picture identity.
++    /// cost  🚩
++    /// tag   api, nonthrowing
++    static void SeatGlyphPicture(const IconDepot& Depot);
++
++    /// 🧩 Dismisses the windowed seat.
++    /// cost  ✔️
++    /// tag   api, nonallocating, nonthrowing
++    static void DismissWindowed();
 +};
 +
 +}   // namespace Rift
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
-index 0000000..3dccef1
+index 0000000..6576a52
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,113 @@
 +//============================================================================================================================================
 +//                                                       INTERFACESEQUENCE.CPP
 +//============================================================================================================================================
@@ -2124,6 +2295,11 @@ index 0000000..3dccef1
 +    return ImGui::GetDrawData();
 +}
 +
++void* InterfaceSequence::SealTickDrawData()
++{
++    return ImGui::GetDrawData();
++}
++
 +void InterfaceSequence::SeatFaultReporter()
 +{
 +#if defined(_WIN32)
@@ -2147,6 +2323,125 @@ index 0000000..3dccef1
 +void InterfaceSequence::Dismiss()
 +{
 +    ImGui::DestroyContext();
++}
++
++}   // namespace Rift
+diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequenceWindow.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequenceWindow.cpp
+new file mode 100644
+index 0000000..b241686
+--- /dev/null
++++ b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequenceWindow.cpp
+@@ -0,0 +1,113 @@
++//============================================================================================================================================
++//                                                    INTERFACESEQUENCEWINDOW.CPP
++//============================================================================================================================================
++// 🧩 The interactive seat — a platform window driving the vendored context, translated wholly inside SlateUI.
++
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
++
++#include "imgui.h"
++#include "backends/imgui_impl_glfw.h"
++#include "backends/imgui_impl_opengl3.h"
++
++#include <GLFW/glfw3.h>
++
++#include <cstdint>
++#include <cstdio>
++
++namespace Rift
++{
++
++namespace
++{
++
++GLFWwindow* StandingWindow = nullptr;   // [-] - the one windowed seat
++
++/// 🧩 Closes the window when the escape key is pressed.
++void CloseOnEscape(GLFWwindow* Window, int Key, int Scancode, int Action, int Mods)
++{
++    (void)Scancode;  (void)Mods;
++    if (Key == GLFW_KEY_ESCAPE && Action == GLFW_PRESS)
++        glfwSetWindowShouldClose(Window, GLFW_TRUE);
++}
++
++}   // namespace
++
++Deliver<bool> InterfaceSequence::AdoptWindowed(double DisplayAlong, double DisplayAcross, const char* TitleRun)
++{
++    if (glfwInit() != GLFW_TRUE)
++        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "the platform window library refused to initialise" });
++
++    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
++    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
++    StandingWindow = glfwCreateWindow(static_cast<int>(DisplayAlong), static_cast<int>(DisplayAcross),
++                                      TitleRun != nullptr ? TitleRun : "RIFT", nullptr, nullptr);
++    if (StandingWindow == nullptr)
++        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "the window refused to open" });
++
++    glfwMakeContextCurrent(StandingWindow);
++    glfwSwapInterval(1);
++    glfwSetKeyCallback(StandingWindow, CloseOnEscape);
++
++    Adopt(DisplayAlong, DisplayAcross);
++    ImGui_ImplGlfw_InitForOpenGL(StandingWindow, true);
++    ImGui_ImplOpenGL3_Init();
++    return Deliver<bool>::Delivered(true);
++}
++
++bool InterfaceSequence::WindowStanding()
++{
++    return StandingWindow != nullptr && glfwWindowShouldClose(StandingWindow) == GLFW_FALSE;
++}
++
++Deliver<bool> InterfaceSequence::BeginWindowTick()
++{
++    if (StandingWindow == nullptr)
++        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "no window stands adopted" });
++
++    glfwPollEvents();
++    ImGui_ImplOpenGL3_NewFrame();
++    ImGui_ImplGlfw_NewFrame();
++    OpenTick();
++    return Deliver<bool>::Delivered(true);
++}
++
++void InterfaceSequence::EndWindowTick()
++{
++    if (StandingWindow == nullptr)
++        return;
++
++    SealTick();
++    ImGui_ImplOpenGL3_RenderDrawData(static_cast<ImDrawData*>(SealTickDrawData()));
++    glfwSwapBuffers(StandingWindow);
++}
++
++void InterfaceSequence::SeatGlyphPicture(const IconDepot& Depot)
++{
++    if (StandingWindow == nullptr)
++        return;
++
++    unsigned int GlyphTexture = 0u;
++    glGenTextures(1, &GlyphTexture);
++    glBindTexture(GL_TEXTURE_2D, GlyphTexture);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
++    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<int>(IconDepot::GlyphExtent),
++                 static_cast<int>(IconDepot::GlyphExtent), 0, GL_RGBA, GL_UNSIGNED_BYTE, Depot.PictureOrdinates());
++    const_cast<IconDepot&>(Depot).AdoptIdentity(reinterpret_cast<void*>(static_cast<std::uintptr_t>(GlyphTexture)));
++}
++
++void InterfaceSequence::DismissWindowed()
++{
++    if (StandingWindow == nullptr)
++        return;
++
++    ImGui_ImplOpenGL3_Shutdown();
++    ImGui_ImplGlfw_Shutdown();
++    Dismiss();
++    glfwDestroyWindow(StandingWindow);
++    StandingWindow = nullptr;
++    glfwTerminate();
 +}
 +
 +}   // namespace Rift
@@ -6341,10 +6636,10 @@ index 0000000..99ece39
 +}   // namespace Rift
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..56a7f37
+index 0000000..46381fe
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,77 @@
 +# RIFT — standalone transcribed panels. Sandbox build; Module.toml carries the declarative unit map.
 +#
 +#   make            build both hosts
@@ -6412,9 +6707,13 @@ index 0000000..56a7f37
 +
 +# ① The interactive window host — requires local GLFW and OpenGL development packages
 +#    (`pkg-config glfw3 gl`). Not built by default; the sandbox has neither.
-+outliner-window: $(IMGUI_SOURCES) $(ENGINE_SOURCES) \
-+                 Engine/Application/OutlinerHost/Source/WindowHost.cpp | $(BUILD)
-+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(shell pkg-config --cflags --libs glfw3 gl) -o $(BUILD)/OutlinerWindowHost
++# ① The interactive window host — the platform-window TU needs local GLFW headers/libs
++#    (`pkg-config glfw3 gl`). On Slate the same host builds through Construct.ps1, where
++#    InterfaceSequence/Source/InterfaceSequenceWindow.cpp supplies the windowed seam.
++outliner-window: $(IMGUI_SOURCES) $(filter-out $(BUILD)/OutlinerHost,$(ENGINE_SOURCES)) \
++                 Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequenceWindow.cpp \
++                 Engine/Application/OutlinerWindowHost/Source/OutlinerWindowHost.cpp | $(BUILD)
++	$(CXX) $(CXXFLAGS) $(INCLUDES) -I Engine $^ $(shell pkg-config --cflags --libs glfw3 gl) -o $(BUILD)/OutlinerWindowHost
 +
 +check: proof
 +	python3 Tools/AssertProofs.py

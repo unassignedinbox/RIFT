@@ -7,7 +7,6 @@
 #include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
-#include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -101,7 +100,7 @@ int main()
         PanelExchange Surface;
         if (Surface.Adopt(PanelExchange::ShellLayer::Beneath).ContentPresent())
         {
-            ThemeSpecification Sheet;
+            WorkspaceInk Sheet;
             Surface.Ground(PlaneExtent{ 0.0f, 0.0f, WindowAlong, WindowAcross }, Sheet.DeskGround, 0.0f);
             const float Margin = (WindowAlong - DirectoryAlong) * 0.5f;
             Directory.Advance(Surface, PlaneExtent{ Margin, 20.0f, Margin + DirectoryAlong, WindowAcross - 40.0f },
