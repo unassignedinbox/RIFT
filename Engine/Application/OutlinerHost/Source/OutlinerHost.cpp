@@ -102,28 +102,11 @@ int main(int ArgumentCount, char** Arguments)
 
     using namespace Rift;
 
-    if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
-    {
-        std::fprintf(stderr, "OutlinerHost: the interface context refused to adopt\n");
-        return 1;
-    }
-
     void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
     RasterCodec Codec;
-    if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
-    {
-        std::fprintf(stderr, "OutlinerHost: the atlas refused to seat\n");
-        return 1;
-    }
-
     IconDepot Depot;
-    if (!Depot.Construct().ContentPresent())
-    {
-        std::fprintf(stderr, "OutlinerHost: the glyph depot refused to construct\n");
-        return 1;
-    }
-    Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
-                                          Depot.PictureOrdinates() });
+    const bool DepotStanding = false;
+    (void)DepotStanding;
 
     OutlinerPanel Directory;
     SeedStand Stand;
@@ -137,8 +120,31 @@ int main(int ArgumentCount, char** Arguments)
         { "filter",      { "r003", nullptr, nullptr }, "sk" },
     };
 
+    InterfaceSequence::SeatFaultReporter();
+
     for (const HostState& State : States)
     {
+        char StageRun[96];
+        std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s adopt", State.ShotRun);
+        InterfaceSequence::NameStage(StageRun);
+        if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
+        {
+            std::fprintf(stderr, "OutlinerHost: the interface context refused to adopt\n");
+            return 1;
+        }
+        if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
+        {
+            std::fprintf(stderr, "OutlinerHost: the atlas refused to seat\n");
+            return 1;
+        }
+        if (!Depot.Construct().ContentPresent())
+        {
+            std::fprintf(stderr, "OutlinerHost: the glyph depot refused to construct\n");
+            return 1;
+        }
+        Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
+                                              Depot.PictureOrdinates() });
+
         for (int Warm = 0; Warm < 3; ++Warm)
         {
             InterfaceSequence::SeatPointer(-1.0e5f, -1.0e5f);
@@ -168,6 +174,8 @@ int main(int ArgumentCount, char** Arguments)
                 Surface.Seal();
             }
 
+            std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s tick=%d seal", State.ShotRun, Warm);
+            InterfaceSequence::NameStage(StageRun);
             void* RecordedDrawData = InterfaceSequence::SealTick();
 
             if (Warm == 2)
@@ -186,9 +194,12 @@ int main(int ArgumentCount, char** Arguments)
                     std::fprintf(stderr, "OutlinerHost: %s refused — %s\n", ProofPath, Written.Declined().Run);
             }
         }
-    }
 
-    InterfaceSequence::Dismiss();
+        // ①① Each state dismisses its own context — no state inherits another's standing interface.
+        std::snprintf(StageRun, sizeof StageRun, "OutlinerHost: state=%s dismiss", State.ShotRun);
+        InterfaceSequence::NameStage(StageRun);
+        InterfaceSequence::Dismiss();
+    }
 
     std::printf("OutlinerHost: every proof seated under %s\n", ProofPrefix);
     if (PauseAtEnd)

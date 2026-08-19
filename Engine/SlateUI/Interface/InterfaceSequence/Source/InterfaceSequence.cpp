@@ -7,6 +7,12 @@
 
 #include "imgui.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
+#include <cstdio>
+
 namespace Rift
 {
 
@@ -72,6 +78,26 @@ void* InterfaceSequence::SealTick()
     ImGui::End();
     ImGui::Render();
     return ImGui::GetDrawData();
+}
+
+void InterfaceSequence::SeatFaultReporter()
+{
+#if defined(_WIN32)
+    ::SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* Pointers) -> LONG
+    {
+        std::fprintf(stderr, "[fault] exception 0x%08lX at %p — the stage named above is where it landed\n",
+                     static_cast<unsigned long>(Pointers->ExceptionRecord->ExceptionCode),
+                     Pointers->ExceptionRecord->ExceptionAddress);
+        std::fflush(stderr);
+        return EXCEPTION_EXECUTE_HANDLER;
+    });
+#endif
+}
+
+void InterfaceSequence::NameStage(const char* StageRun)
+{
+    std::fprintf(stderr, "[stage] %s\n", StageRun);
+    std::fflush(stderr);
 }
 
 void InterfaceSequence::Dismiss()

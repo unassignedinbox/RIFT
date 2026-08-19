@@ -310,9 +310,10 @@ Deliver<bool> RasterCodec::WritePortableNetworkGraphic(const PixelSpace& Extent,
     // ② Scanlines — filter 0, one stride each.
     const std::size_t Stride = static_cast<std::size_t>(Extent.AlongExtent) * 4u;
     std::vector<std::uint8_t> Scanlines((static_cast<std::size_t>(Extent.AcrossExtent)) * (Stride + 1u), 0u);
-    for (std::uint32_t Across = 0u; Across < Extent.AcrossExtent; ++Across)
-        std::memcpy(&Scanlines[static_cast<std::size_t>(Across) * (Stride + 1u) + 1u],
-                    &Extent.Ordinates[static_cast<std::size_t>(Across) * Stride], Stride);
+    for (std::uint32_t Across = 0u; Across < Extent.AcrossExtent && Extent.AcrossExtent > 0u; ++Across)
+        if (Stride > 0u)
+            std::memcpy(&Scanlines[static_cast<std::size_t>(Across) * (Stride + 1u) + 1u],
+                        &Extent.Ordinates[static_cast<std::size_t>(Across) * Stride], Stride);
 
     // ③ zlib stream of stored blocks — honest, uncompressed, dependency-free.
     const std::size_t PayloadExtent = Scanlines.size();

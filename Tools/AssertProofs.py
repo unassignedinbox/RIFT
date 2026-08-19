@@ -46,7 +46,7 @@ GATES = [
     ]),
     # ⑥ PanelValidationHost — texture paint, reorder drag.
     ("VisualProof/PanelValidationHost/texturepaint-reorder.png", [
-        (400, 403, 0x4A90E2, 14, "insertion rail"),
+        (400, 347, 0x4A90E2, 14, "insertion rail"),
     ]),
     # ⑦ PanelValidationHost — CAD drafting, properties page.
     ("VisualProof/PanelValidationHost/cad-properties.png", [

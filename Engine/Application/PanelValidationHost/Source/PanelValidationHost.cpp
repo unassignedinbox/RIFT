@@ -222,28 +222,9 @@ int main(int ArgumentCount, char** Arguments)
     }
 
     // ① The interface context adopts; the atlas seats against the codec.
-    if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
-    {
-        std::fprintf(stderr, "PanelValidationHost: the interface context refused to adopt\n");
-        return 1;
-    }
-
     void* AtlasIdentity = reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x1u));
     RasterCodec Codec;
-    if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
-    {
-        std::fprintf(stderr, "PanelValidationHost: the atlas refused to seat\n");
-        return 1;
-    }
-
     IconDepot Depot;
-    if (!Depot.Construct().ContentPresent())
-    {
-        std::fprintf(stderr, "PanelValidationHost: the glyph depot refused to construct\n");
-        return 1;
-    }
-    Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
-                                          Depot.PictureOrdinates() });
 
     // ② The seated ordinates.
     LayerOrdinates Layers[6];
@@ -280,8 +261,31 @@ int main(int ArgumentCount, char** Arguments)
         { "cad-history",          4u, 0u, false, false, false },
     };
 
+    InterfaceSequence::SeatFaultReporter();
+
     for (const ValidationState& State : States)
     {
+        char StageRun[96];
+        std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s adopt", State.ShotRun);
+        InterfaceSequence::NameStage(StageRun);
+        if (!InterfaceSequence::Adopt(DisplayAlong, DisplayAcross).ContentPresent())
+        {
+            std::fprintf(stderr, "PanelValidationHost: the interface context refused to adopt\n");
+            return 1;
+        }
+        if (!Codec.SeatAtlas(AtlasIdentity).ContentPresent())
+        {
+            std::fprintf(stderr, "PanelValidationHost: the atlas refused to seat\n");
+            return 1;
+        }
+        if (!Depot.Construct().ContentPresent())
+        {
+            std::fprintf(stderr, "PanelValidationHost: the glyph depot refused to construct\n");
+            return 1;
+        }
+        Codec.SeatPicture(PictureDeclaration{ Depot.GlyphIdentity(), IconDepot::GlyphExtent, IconDepot::GlyphExtent,
+                                              Depot.PictureOrdinates() });
+
         for (int Warm = 0; Warm < 3; ++Warm)
         {
             // ①① The scripted pointer: a press on the Dirt Pass zone that travels between cards.
@@ -290,7 +294,7 @@ int main(int ArgumentCount, char** Arguments)
                 constexpr float PressAlong = 250.0f;   // [px] - the Dirt Pass zone
                 constexpr float PressAcross = 330.0f;  // [px]
                 constexpr float DropAlong   = 250.0f;  // [px] - between Scratches and Base Metal
-                constexpr float DropAcross  = 380.0f;  // [px]
+                constexpr float DropAcross  = 430.0f;  // [px]
                 if (Warm == 0)
                 {
                     InterfaceSequence::SeatPointer(PressAlong, PressAcross);
@@ -368,6 +372,8 @@ int main(int ArgumentCount, char** Arguments)
                 Surface.Seal();
             }
 
+            std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s tick=%d seal", State.ShotRun, Warm);
+            InterfaceSequence::NameStage(StageRun);
             void* RecordedDrawData = InterfaceSequence::SealTick();
 
             if (Warm == 2)
@@ -386,9 +392,12 @@ int main(int ArgumentCount, char** Arguments)
                     std::fprintf(stderr, "%s: %s refused — %s\n", "PanelValidationHost", ProofPath, Written.Declined().Run);
             }
         }
-    }
 
-    InterfaceSequence::Dismiss();
+        // ①① Each state dismisses its own context — no state inherits another's standing interface.
+        std::snprintf(StageRun, sizeof StageRun, "PanelValidationHost: state=%s dismiss", State.ShotRun);
+        InterfaceSequence::NameStage(StageRun);
+        InterfaceSequence::Dismiss();
+    }
 
     std::printf("PanelValidationHost: every proof seated under %s\n", ProofPrefix);
     if (PauseAtEnd)

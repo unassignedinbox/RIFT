@@ -56,6 +56,17 @@ struct InterfaceSequence
     /// cost  ✔️
     /// tag   api, nonallocating, nonthrowing
     static void Dismiss();
+
+    /// 🧩 Seats the platform's unhandled-exception reporter, so a silent fault names itself on the console.
+    /// note  Windows-only; a no-op elsewhere. Reports the exception ordinal and the faulting address.
+    /// cost  ✔️
+    /// tag   api, nonthrowing
+    static void SeatFaultReporter();
+
+    /// 🧩 Names the standing stage on the unbuffered error stream — the trace a silent fault leaves behind.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    static void NameStage(const char* StageRun);
 };
 
 }   // namespace Rift
