@@ -40,7 +40,7 @@ index 971a260..44a5ba6 100644
  #    order below is the reverse of the dependency order, which is what the linker resolves against.
 diff --git a/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
 new file mode 100644
-index 0000000..a6ff263
+index 0000000..3c77b84
 --- /dev/null
 +++ b/Engine/Application/OutlinerHost/Source/OutlinerHost.cpp
 @@ -0,0 +1,200 @@
@@ -49,11 +49,11 @@ index 0000000..a6ff263
 +//============================================================================================================================================
 +// 🧩 The standalone scene directory — the CAD panel's outliner alone on the desk, no editor, no viewport, no lattice.
 +
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
-+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 +
 +#include <cstdint>
 +#include <cstdio>
@@ -246,7 +246,7 @@ index 0000000..a6ff263
 +}
 diff --git a/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
 new file mode 100644
-index 0000000..2e9e78a
+index 0000000..4401fe2
 --- /dev/null
 +++ b/Engine/Application/PanelValidationHost/Source/PanelValidationHost.cpp
 @@ -0,0 +1,400 @@
@@ -255,16 +255,16 @@ index 0000000..2e9e78a
 +//============================================================================================================================================
 +// 🧩 Records the texture-paint panels and the CAD drafting panel for direct visual comparison against their references.
 +
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
-+#include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
-+#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-+#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
++#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +#include <cstdio>
@@ -729,7 +729,7 @@ index 0000000..0f6ee43
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h b/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h
 new file mode 100644
-index 0000000..fd68f0c
+index 0000000..b48f416
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h
 @@ -0,0 +1,50 @@
@@ -740,11 +740,11 @@ index 0000000..fd68f0c
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 +
 +#include <cstdint>
 +
@@ -785,7 +785,7 @@ index 0000000..fd68f0c
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 new file mode 100644
-index 0000000..ea948c9
+index 0000000..febfd83
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/DraftingPanel/Source/DraftingPanel.cpp
 @@ -0,0 +1,230 @@
@@ -794,8 +794,8 @@ index 0000000..ea948c9
 +//============================================================================================================================================
 +// 🧩 The drafting seat — directory on the left, the Properties & Actions bar and the metadata pane on the right.
 +
-+#include "Engine/SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/DraftingPanel/Api/DraftingPanel.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +
 +#include "imgui.h"
 +
@@ -1021,7 +1021,7 @@ index 0000000..ea948c9
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h b/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h
 new file mode 100644
-index 0000000..ba1d593
+index 0000000..4851548
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h
 @@ -0,0 +1,138 @@
@@ -1032,9 +1032,9 @@ index 0000000..ba1d593
 +
 +#pragma once
 +
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
@@ -1165,7 +1165,7 @@ index 0000000..ba1d593
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp b/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp
 new file mode 100644
-index 0000000..2467d97
+index 0000000..f12edc6
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/FieldPanel/Source/FieldPanel.cpp
 @@ -0,0 +1,537 @@
@@ -1174,7 +1174,7 @@ index 0000000..2467d97
 +//============================================================================================================================================
 +// 🧩 The reference control panel's widgets — capsules, switches, segments, dropdowns, sliders, vectors, colours, paths — presented on the recording seam.
 +
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +
 +#include "imgui.h"
 +
@@ -1720,7 +1720,7 @@ index 0000000..822a515
 +</svg>
 diff --git a/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h b/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h
 new file mode 100644
-index 0000000..de2dc08
+index 0000000..c004f2a
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h
 @@ -0,0 +1,77 @@
@@ -1731,9 +1731,9 @@ index 0000000..de2dc08
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +#include <vector>
@@ -1803,7 +1803,7 @@ index 0000000..de2dc08
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 new file mode 100644
-index 0000000..a0e610b
+index 0000000..e0a7440
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/IconDepot/Source/IconDepot.cpp
 @@ -0,0 +1,131 @@
@@ -1812,7 +1812,7 @@ index 0000000..a0e610b
 +//============================================================================================================================================
 +// 🧩 Rasterises the dummy glyph's SVG geometry — rounded square, centred dot — into one tintable picture.
 +
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
 +
 +#include "imgui.h"
 +
@@ -1940,7 +1940,7 @@ index 0000000..a0e610b
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 new file mode 100644
-index 0000000..0c27ca3
+index 0000000..1972422
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h
 @@ -0,0 +1,61 @@
@@ -1951,7 +1951,7 @@ index 0000000..0c27ca3
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
++#include "Contract/Api/DeliveryContract.h"
 +
 +#include <cstdint>
 +
@@ -2007,7 +2007,7 @@ index 0000000..0c27ca3
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 new file mode 100644
-index 0000000..267130e
+index 0000000..6ecb036
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/InterfaceSequence/Source/InterfaceSequence.cpp
 @@ -0,0 +1,82 @@
@@ -2016,7 +2016,7 @@ index 0000000..267130e
 +//============================================================================================================================================
 +// 🧩 The one place a headless host's vendored context is addressed — adoption, pointer, tick, dismissal.
 +
-+#include "Engine/SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
++#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 +
 +#include "imgui.h"
 +
@@ -2095,7 +2095,7 @@ index 0000000..267130e
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h b/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h
 new file mode 100644
-index 0000000..b963e12
+index 0000000..811561a
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h
 @@ -0,0 +1,148 @@
@@ -2106,10 +2106,10 @@ index 0000000..b963e12
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
@@ -2249,7 +2249,7 @@ index 0000000..b963e12
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 new file mode 100644
-index 0000000..ef8bb8c
+index 0000000..de2adf3
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/OutlinerPanel/Source/OutlinerPanel.cpp
 @@ -0,0 +1,356 @@
@@ -2258,8 +2258,8 @@ index 0000000..ef8bb8c
 +//============================================================================================================================================
 +// 🧩 The scene directory tree, presented row by row from borrowed declarations — head, filter, forest, count foot.
 +
-+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +
 +#include "imgui.h"
 +
@@ -2611,7 +2611,7 @@ index 0000000..ef8bb8c
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h b/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h
 new file mode 100644
-index 0000000..03bf072
+index 0000000..c61b4f6
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h
 @@ -0,0 +1,157 @@
@@ -2622,11 +2622,11 @@ index 0000000..03bf072
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
@@ -2774,7 +2774,7 @@ index 0000000..03bf072
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 new file mode 100644
-index 0000000..b74400e
+index 0000000..3a641b9
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/PropertiesPanel/Source/PropertiesPanel.cpp
 @@ -0,0 +1,683 @@
@@ -2783,8 +2783,8 @@ index 0000000..b74400e
 +//============================================================================================================================================
 +// 🧩 Record cards through ControlPanel widgets, the carousel, and the revision stack — Inspector.tsx on the recording seam.
 +
-+#include "Engine/SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/PropertiesPanel/Api/PropertiesPanel.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +
 +#include "imgui.h"
 +
@@ -3463,7 +3463,7 @@ index 0000000..b74400e
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h b/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h
 new file mode 100644
-index 0000000..e82b251
+index 0000000..efa082e
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h
 @@ -0,0 +1,90 @@
@@ -3474,7 +3474,7 @@ index 0000000..e82b251
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
++#include "Contract/Api/DeliveryContract.h"
 +
 +#include <cstdint>
 +#include <vector>
@@ -3559,7 +3559,7 @@ index 0000000..e82b251
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 new file mode 100644
-index 0000000..15c4f5f
+index 0000000..7073d60
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RasterCodec/Source/RasterCodec.cpp
 @@ -0,0 +1,371 @@
@@ -3568,7 +3568,7 @@ index 0000000..15c4f5f
 +//============================================================================================================================================
 +// 🧩 Scanline coverage, bilinear texture reads, straight-alpha source-over — the whole pipeline is arithmetic on the byte extent.
 +
-+#include "Engine/SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
++#include "SlateUI/Interface/RasterCodec/Api/RasterCodec.h"
 +
 +#include "imgui.h"
 +
@@ -3936,7 +3936,7 @@ index 0000000..15c4f5f
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h b/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h
 new file mode 100644
-index 0000000..e4a1414
+index 0000000..8986f9a
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h
 @@ -0,0 +1,234 @@
@@ -3947,8 +3947,8 @@ index 0000000..e4a1414
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
@@ -4176,7 +4176,7 @@ index 0000000..e4a1414
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp b/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp
 new file mode 100644
-index 0000000..e5ee5e3
+index 0000000..428b27a
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/RecordingSurface/Source/RecordingSurface.cpp
 @@ -0,0 +1,468 @@
@@ -4185,7 +4185,7 @@ index 0000000..e5ee5e3
 +//============================================================================================================================================
 +// 🧩 The one translation unit that addresses the vendored interface library — every recorded primitive lands in its draw list.
 +
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
 +
 +#include "imgui.h"
 +
@@ -4859,7 +4859,7 @@ index 0000000..e00d268
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h b/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h
 new file mode 100644
-index 0000000..e4a909d
+index 0000000..b0417e2
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h
 @@ -0,0 +1,215 @@
@@ -4870,10 +4870,10 @@ index 0000000..e4a909d
 +
 +#pragma once
 +
-+#include "Engine/Contract/Api/DeliveryContract.h"
-+#include "Engine/SlateUI/Interface/IconDepot/Api/IconDepot.h"
-+#include "Engine/SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
-+#include "Engine/SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
++#include "Contract/Api/DeliveryContract.h"
++#include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
++#include "SlateUI/Interface/RecordingSurface/Api/RecordingSurface.h"
++#include "SlateUI/Interface/ReferenceSpecification/Api/ReferenceSpecification.h"
 +
 +#include <cstdint>
 +
@@ -5080,7 +5080,7 @@ index 0000000..e4a909d
 +}   // namespace Slate
 diff --git a/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 new file mode 100644
-index 0000000..aae2996
+index 0000000..9260022
 --- /dev/null
 +++ b/Engine/SlateUI/Interface/TexturePaintPanel/Source/TexturePaintPanel.cpp
 @@ -0,0 +1,1197 @@
@@ -5089,8 +5089,8 @@ index 0000000..aae2996
 +//============================================================================================================================================
 +// 🧩 Layer stack, channel cards and mask section — the texture-paint reference transcribed onto the recording seam.
 +
-+#include "Engine/SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
-+#include "Engine/SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
++#include "SlateUI/Interface/TexturePaintPanel/Api/TexturePaintPanel.h"
++#include "SlateUI/Interface/FieldPanel/Api/FieldPanel.h"
 +
 +#include "imgui.h"
 +
@@ -6283,7 +6283,7 @@ index 0000000..aae2996
 +}   // namespace Slate
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..d878f2f
+index 0000000..857e466
 --- /dev/null
 +++ b/Makefile
 @@ -0,0 +1,73 @@
@@ -6295,7 +6295,7 @@ index 0000000..d878f2f
 +
 +CXX      ?= g++
 +CXXFLAGS ?= -std=c++20 -O1 -g0 -Wall -Wno-unused-parameter -Wno-unused-variable
-+INCLUDES := -I ExternalPackages/imgui -I .
++INCLUDES := -I ExternalPackages/imgui -I Engine -I .
 +
 +IMGUI_SOURCES := \
 +    ExternalPackages/imgui/imgui.cpp \
