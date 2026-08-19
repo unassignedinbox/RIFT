@@ -1,0 +1,9 @@
+# RasterCodec — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "RasterCodec"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 Software raster translation of recorded draw data into display pixels — no window, no GPU.

@@ -1,0 +1,9 @@
+# RecordingSurface — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "RecordingSurface"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 Primitives in, recorded commands out — the standalone drawing seam over the vendored interface library.

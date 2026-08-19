@@ -1,0 +1,9 @@
+# PropertiesPanel — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "PropertiesPanel"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The record inspector with the Properties / History carousel, transcribed from Inspector.tsx.

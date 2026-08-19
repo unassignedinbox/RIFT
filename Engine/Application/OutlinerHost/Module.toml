@@ -1,0 +1,9 @@
+# Application — the host executables.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "Application"
+product = "Executable"
+subject = [ "OutlinerHost" ]
+
+# 📝 The standalone world-editor seat around the general-purpose outliner.

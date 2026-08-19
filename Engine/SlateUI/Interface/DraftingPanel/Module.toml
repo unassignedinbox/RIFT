@@ -1,0 +1,9 @@
+# DraftingPanel — a SlateUI interface unit.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "DraftingPanel"
+product = "StaticLibrary"
+subject = [ "Interface" ]
+
+# 📝 The CAD drafting composition — directory, Properties & Actions bar, metadata pane; from page.tsx's drafting seat.

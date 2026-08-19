@@ -1,0 +1,9 @@
+# Application — the host executables.
+# Declarative map only; the standalone build is the Makefile at the repository root.
+
+[unit]
+name    = "Application"
+product = "Executable"
+subject = [ "PanelValidationHost" ]
+
+# 📝 Records the texture-paint and CAD panels for direct visual comparison.

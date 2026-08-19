@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- The dummy glyph — the single placeholder that stands in for every classification icon.
+       Rounded square outline plus centred dot; tinted per classification at presentation time. -->
+  <rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  <circle cx="12" cy="12" r="2.7" fill="currentColor"/>
+</svg>
