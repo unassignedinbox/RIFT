@@ -61,18 +61,33 @@ void InterfaceSequence::SeatPrimaryPress()
     ImGui::GetIO().AddMouseButtonEvent(0, true);
 }
 
+Deliver<bool> InterfaceSequence::OpenSeatWindow(double DisplayAlong, double DisplayAcross)
+{
+    if (ImGui::GetCurrentContext() == nullptr)
+        return Deliver<bool>::Refuse({ RefusalReason::CapabilityAbsent, "no vendored context stands" });
+
+    // ① One borderless window filling the display — the seat every panel's widgets stand in.
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImVec2(static_cast<float>(DisplayAlong), static_cast<float>(DisplayAcross)));
+    ImGui::Begin("Slate \u2014 Reference Seat", nullptr,
+                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar |
+                 ImGuiWindowFlags_NoSavedSettings);
+    return Deliver<bool>::Delivered(true);
+}
+
+void InterfaceSequence::CloseSeatWindow()
+{
+    if (ImGui::GetCurrentContext() == nullptr)
+        return;
+    ImGui::End();
+}
+
 Deliver<bool> InterfaceSequence::OpenTick()
 {
     ImGuiIO& VendorIO = ImGui::GetIO();
     ImGui::NewFrame();
-
-    // ① One borderless window filling the display — the seat every panel records against.
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(VendorIO.DisplaySize);
-    ImGui::Begin("Slate \u2014 Panel Seat", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar);
-    return Deliver<bool>::Delivered(true);
+    return OpenSeatWindow(VendorIO.DisplaySize.x, VendorIO.DisplaySize.y);
 }
 
 void* InterfaceSequence::SealTick()

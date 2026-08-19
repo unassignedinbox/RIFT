@@ -72,6 +72,19 @@ struct InterfaceSequence
     /// tag   api, nonallocating, nonthrowing
     static void NameStage(const char* StageRun);
 
+    /// 🧩 Opens the borderless seat window inside an engine-owned tick — no frame of its own.
+    /// note  🔴 The engine's InterfaceExchange owns NewFrame; the seat window is where the reference
+    ///       panels' widgets stand, so they receive focus, keys and the pointer.
+    /// out   Deliver  [-]  refuses when no context stands
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    static Deliver<bool> OpenSeatWindow(double DisplayAlong, double DisplayAcross);
+
+    /// 🧩 Closes the seat window opened by OpenSeatWindow.
+    /// cost  ✔️
+    /// tag   api, nonallocating, nonthrowing
+    static void CloseSeatWindow();
+
 
 };
 

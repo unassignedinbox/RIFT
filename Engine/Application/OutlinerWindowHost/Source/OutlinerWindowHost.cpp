@@ -9,11 +9,13 @@
 #include "SlateVulkan/Device/HostLifecycle/Api/HostLifecycle.h"
 
 #include "SlateUI/Interface/IconDepot/Api/IconDepot.h"
+#include "SlateUI/Interface/InterfaceSequence/Api/InterfaceSequence.h"
 #include "SlateUI/Interface/OutlinerPanel/Api/OutlinerPanel.h"
 #include "SlateUI/Interface/PanelExchange/Api/PanelExchange.h"
 #include "SlateUI/Interface/ThemeSpecification/Api/ThemeSpecification.h"
 
 #include <cstdio>
+#include <cstring>
 
 //------------------------------------------------------------------------------------------------------------------------
 //                                                          FIGURES
@@ -191,8 +193,11 @@ int main()
         {
             const DisplayCondition& Display = Surface.Display();
 
+            // ①① 🔴 The seat window is where the panels' widgets stand — without it the directory is a
+            //     painting: visible, but no row, eye or filter field can receive focus or the pointer.
             Slate::Reference::PanelExchange PanelRecordSurface;
-            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent())
+            if (PanelRecordSurface.Adopt(Slate::Reference::PanelExchange::ShellLayer::Beneath).ContentPresent() &&
+                Slate::Reference::InterfaceSequence::OpenSeatWindow(Display.ExtentAlong, Display.ExtentAcross).ContentPresent())
             {
                 Slate::Reference::WorkspaceInk Sheet;
                 PanelRecordSurface.Ground(Slate::Reference::PlaneExtent{ 0.0f, 0.0f, Display.ExtentAlong, Display.ExtentAcross },
@@ -203,6 +208,7 @@ int main()
                                   Forest.Root, 1u, Slate::Reference::OutlinerComposition{ "Directory", "Bracket_Rev4" }, Depot);
                 if (Directory.InspectRaised)
                     Directory.InspectRaised = false;   // 📝 the windowed seat inspects in place; nothing slides
+                Slate::Reference::InterfaceSequence::CloseSeatWindow();
                 PanelRecordSurface.Seal();
             }
 
